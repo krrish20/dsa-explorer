@@ -1,167 +1,923 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>DSA Explorer</title>
-<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Syne:wght@400;700;800&display=swap" rel="stylesheet">
-<style>
-  * { box-sizing: border-box; margin: 0; padding: 0; }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DSA Explorer | Refined</title>
+    <link
+        href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;800&family=Syne:wght@400;600;800&display=swap"
+        rel="stylesheet">
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
 
-  :root {
-    --bg: #0a0a0f;
-    --surface: #12121a;
-    --card: #1a1a26;
-    --border: #2a2a3e;
-    --accent: #7c6aff;
-    --accent2: #ff6a9b;
-    --accent3: #6afff0;
-    --accent4: #ffd06a;
-    --text: #e8e8f0;
-    --muted: #7070a0;
-    --font-head: 'Syne', sans-serif;
-    --font-mono: 'JetBrains Mono', monospace;
-  }
+        :root {
+            --bg1: #090814;
+            --bg2: #1b163d;
+            --bg3: #111021;
+            --surface: rgba(18, 18, 28, 0.75);
+            --surface-hover: rgba(30, 30, 45, 0.85);
+            --card: #1e1e2d;
+            --border: rgba(124, 106, 255, 0.2);
+            --border-acc: rgba(124, 106, 255, 0.6);
+            --accent: #9d8cff;
+            --accent2: #ff75a0;
+            --accent3: #4fffe5;
+            --accent4: #ffce54;
+            --text: #ffffff;
+            --muted: #8b8ba7;
+            --font-head: 'Syne', sans-serif;
+            --font-mono: 'JetBrains Mono', monospace;
+        }
 
-  body { background: var(--bg); color: var(--text); font-family: var(--font-head); min-height: 100vh; }
+        body {
+            background: linear-gradient(135deg, var(--bg1), var(--bg2), var(--bg3));
+            background-size: 300% 300%;
+            animation: gradientBG 20s ease infinite;
+            color: var(--text);
+            font-family: var(--font-head);
+            min-height: 100vh;
+            padding: 30px 15px;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+        }
 
-  #app { max-width: 860px; margin: 0 auto; padding-bottom: 40px; }
+        @keyframes gradientBG {
+            0% {
+                background-position: 0% 50%;
+            }
 
-  .header { padding: 24px 24px 16px; border-bottom: 1px solid var(--border); }
-  .header h1 { font-size: 26px; font-weight: 800; letter-spacing: -0.5px; color: var(--text); }
-  .header h1 span { color: var(--accent); }
+            50% {
+                background-position: 100% 50%;
+            }
 
-  .tabs { display: flex; gap: 0; overflow-x: auto; padding: 0 24px; background: var(--surface); border-bottom: 1px solid var(--border); }
-  .tab { padding: 12px 16px; font-size: 12px; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; cursor: pointer; color: var(--muted); border-bottom: 2px solid transparent; white-space: nowrap; font-family: var(--font-head); transition: all 0.15s; }
-  .tab:hover { color: var(--text); }
-  .tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+            100% {
+                background-position: 0% 50%;
+            }
+        }
 
-  .content { padding: 24px; }
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
 
-  .topic-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 12px; }
-  .topic-btn { background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 16px 12px; cursor: pointer; text-align: center; transition: all 0.2s; font-family: var(--font-head); }
-  .topic-btn:hover { border-color: var(--accent); transform: translateY(-2px); }
-  .topic-btn.active { border-color: var(--accent); background: #1e1a3a; }
-  .topic-btn .icon { font-size: 22px; margin-bottom: 8px; }
-  .topic-btn .name { font-size: 12px; font-weight: 700; color: var(--text); }
-  .topic-btn .complexity { font-size: 10px; color: var(--muted); margin-top: 4px; font-family: var(--font-mono); }
+        ::-webkit-scrollbar-track {
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 4px;
+        }
 
-  .demo-area { margin-top: 20px; background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 20px; }
-  .demo-title { font-size: 16px; font-weight: 800; color: var(--text); margin-bottom: 4px; }
-  .demo-desc { font-size: 12px; color: var(--muted); margin-bottom: 16px; line-height: 1.5; font-family: var(--font-mono); }
+        ::-webkit-scrollbar-thumb {
+            background: rgba(124, 106, 255, 0.3);
+            border-radius: 4px;
+        }
 
-  .viz-area { min-height: 120px; display: flex; align-items: center; justify-content: center; flex-wrap: wrap; gap: 8px; margin-bottom: 16px; }
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(124, 106, 255, 0.6);
+        }
 
-  .arr-box { display: flex; gap: 4px; align-items: flex-end; }
-  .arr-cell { width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; border-radius: 6px; font-size: 14px; font-weight: 700; font-family: var(--font-mono); border: 1.5px solid var(--border); background: var(--surface); color: var(--text); transition: all 0.3s; }
-  .arr-cell.highlight { background: #2a1f5e; border-color: var(--accent); color: var(--accent); }
-  .arr-cell.compare { background: #2a1028; border-color: var(--accent2); color: var(--accent2); }
-  .arr-cell.sorted { background: #0f2a28; border-color: var(--accent3); color: var(--accent3); }
-  .arr-cell.pivot { background: #2a2010; border-color: var(--accent4); color: var(--accent4); }
+        #app {
+            width: 100%;
+            max-width: 960px;
+            background: var(--surface);
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
+            border-radius: 24px;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6), inset 0 1px 1px rgba(255, 255, 255, 0.1);
+            overflow: hidden;
+        }
 
-  .controls { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
-  .btn { padding: 8px 16px; border-radius: 8px; border: 1px solid var(--border); background: var(--surface); color: var(--text); font-size: 12px; font-weight: 700; cursor: pointer; font-family: var(--font-head); transition: all 0.15s; }
-  .btn:hover { border-color: var(--accent); color: var(--accent); }
-  .btn.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
-  .btn.primary:hover { background: #6a58ee; }
+        .header {
+            padding: 35px;
+            border-bottom: 1px solid var(--border);
+            text-align: center;
+            position: relative;
+            background: radial-gradient(ellipse at top, rgba(124, 106, 255, 0.1) 0%, transparent 70%);
+        }
 
-  .info-badge { display: inline-block; padding: 3px 8px; border-radius: 4px; font-size: 10px; font-family: var(--font-mono); font-weight: 700; margin-right: 6px; }
-  .badge-time { background: #1f1a40; color: var(--accent); }
-  .badge-space { background: #0f2020; color: var(--accent3); }
-  .badge-step { background: #201010; color: var(--accent2); margin-left: auto; }
+        .header::after {
+            content: '';
+            position: absolute;
+            bottom: -1px;
+            left: 15%;
+            right: 15%;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, var(--accent), transparent);
+            opacity: 0.5;
+        }
 
-  .log { font-size: 11px; font-family: var(--font-mono); color: var(--muted); margin-top: 12px; min-height: 20px; padding: 8px; background: var(--surface); border-radius: 6px; border: 1px solid var(--border); }
+        .header h1 {
+            font-size: 42px;
+            font-weight: 800;
+            letter-spacing: -1px;
+            text-shadow: 0 4px 20px rgba(157, 140, 255, 0.3);
+            margin-bottom: 8px;
+        }
 
-  .tree-svg { width: 100%; }
-  .stack-viz { display: flex; flex-direction: column-reverse; gap: 4px; align-items: center; }
-  .queue-viz { display: flex; flex-direction: row; gap: 4px; align-items: center; }
-  .stack-item { width: 120px; padding: 10px; background: var(--surface); border: 1.5px solid var(--border); border-radius: 6px; text-align: center; font-family: var(--font-mono); font-size: 13px; font-weight: 700; transition: all 0.3s; }
-  .stack-item.top { border-color: var(--accent); color: var(--accent); background: #1e1a3a; }
-  .stack-item.front { border-color: var(--accent3); color: var(--accent3); background: #0f2a28; }
-  .stack-item.back { border-color: var(--accent2); color: var(--accent2); background: #2a1028; }
+        .header h1 span {
+            color: var(--accent);
+        }
 
-  .hash-table { display: grid; gap: 4px; }
-  .hash-row { display: flex; gap: 6px; align-items: center; font-family: var(--font-mono); font-size: 12px; }
-  .hash-idx { width: 28px; color: var(--muted); text-align: right; flex-shrink: 0; }
-  .hash-cell { flex: 1; padding: 6px 10px; background: var(--surface); border: 1px solid var(--border); border-radius: 4px; min-height: 30px; transition: all 0.3s; }
-  .hash-cell.filled { border-color: var(--accent); color: var(--accent); background: #1e1a3a; }
-  .hash-cell.collision { border-color: var(--accent4); color: var(--accent4); background: #201a08; }
+        .tabs {
+            display: flex;
+            overflow-x: auto;
+            background: rgba(0, 0, 0, 0.2);
+        }
 
-  .speed-row { display: flex; align-items: center; gap: 8px; font-size: 11px; color: var(--muted); font-family: var(--font-mono); }
-  input[type=range].speed { width: 80px; }
+        .tab {
+            flex: 1;
+            text-align: center;
+            padding: 20px 10px;
+            font-size: 13px;
+            font-weight: 600;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            cursor: pointer;
+            color: var(--muted);
+            border-bottom: 3px solid transparent;
+            white-space: nowrap;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+        }
 
-  .linked-viz { display: flex; align-items: center; gap: 0; flex-wrap: wrap; }
-  .ln-node { display: flex; align-items: center; }
-  .ln-box { padding: 8px 12px; background: var(--surface); border: 1.5px solid var(--border); border-radius: 6px; font-family: var(--font-mono); font-size: 13px; font-weight: 700; transition: all 0.3s; }
-  .ln-box.head { border-color: var(--accent); color: var(--accent); }
-  .ln-box.tail { border-color: var(--accent3); color: var(--accent3); }
-  .ln-arrow { color: var(--muted); font-size: 18px; margin: 0 4px; }
+        .tab:hover {
+            color: var(--text);
+            background: rgba(255, 255, 255, 0.02);
+        }
 
-  .dp-table { display: inline-grid; gap: 3px; }
-  .dp-cell { width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; border-radius: 4px; font-family: var(--font-mono); font-size: 12px; font-weight: 700; background: var(--surface); border: 1px solid var(--border); transition: all 0.3s; color: var(--muted); }
-  .dp-cell.filled { background: #1e1a3a; border-color: var(--accent); color: var(--accent); }
-  .dp-cell.current { background: #2a1028; border-color: var(--accent2); color: var(--accent2); }
-  .dp-cell.header { background: transparent; border-color: transparent; color: var(--muted); font-size: 10px; }
+        .tab.active {
+            color: var(--accent);
+            background: linear-gradient(to top, rgba(124, 106, 255, 0.1) 0%, transparent 100%);
+        }
 
-  .section-label { font-size: 10px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); margin-bottom: 10px; }
+        .tab.active::after {
+            content: '';
+            position: absolute;
+            bottom: -1px;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: var(--accent);
+            box-shadow: 0 -2px 10px var(--accent);
+        }
 
-  .bar-viz { display: flex; align-items: flex-end; gap: 4px; height: 100px; }
-  .bar { border-radius: 4px 4px 0 0; background: var(--surface); border: 1.5px solid var(--border); transition: all 0.3s; display: flex; align-items: flex-end; justify-content: center; padding-bottom: 3px; font-family: var(--font-mono); font-size: 10px; color: var(--muted); min-width: 28px; }
-  .bar.highlight { background: #2a1f5e; border-color: var(--accent); color: var(--accent); }
-  .bar.sorted { background: #0f2a28; border-color: var(--accent3); color: var(--accent3); }
-  .bar.pivot { background: #2a2010; border-color: var(--accent4); color: var(--accent4); }
-  .bar.compare { background: #2a1028; border-color: var(--accent2); color: var(--accent2); }
-</style>
+        .content {
+            padding: 35px;
+        }
+
+        .topic-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(135px, 1fr));
+            gap: 16px;
+            margin-bottom: 25px;
+        }
+
+        .topic-btn {
+            background: rgba(30, 30, 45, 0.5);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 16px;
+            padding: 20px 12px;
+            cursor: pointer;
+            text-align: center;
+            transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .topic-btn:hover {
+            border-color: var(--border-acc);
+            background: var(--surface-hover);
+            transform: translateY(-4px);
+            box-shadow: 0 8px 25px rgba(124, 106, 255, 0.15);
+        }
+
+        .topic-btn.active {
+            border-color: var(--accent);
+            background: rgba(124, 106, 255, 0.1);
+            box-shadow: 0 0 0 1px var(--accent), 0 8px 25px rgba(124, 106, 255, 0.25);
+        }
+
+        .topic-btn .icon {
+            font-size: 32px;
+            margin-bottom: 12px;
+            filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.5));
+            transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        .topic-btn:hover .icon {
+            transform: scale(1.15) translateY(-2px);
+        }
+
+        .topic-btn .name {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text);
+            margin-bottom: 6px;
+        }
+
+        .topic-btn .complexity {
+            font-size: 11px;
+            color: var(--muted);
+            font-family: var(--font-mono);
+            background: rgba(0, 0, 0, 0.3);
+            padding: 4px 8px;
+            border-radius: 8px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .demo-area {
+            background: rgba(0, 0, 0, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: inset 0 0 30px rgba(0, 0, 0, 0.4);
+            position: relative;
+        }
+
+        .demo-title {
+            font-size: 26px;
+            font-weight: 800;
+            color: var(--text);
+            margin-bottom: 10px;
+            letter-spacing: -0.5px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .demo-title::before {
+            content: '';
+            display: block;
+            width: 6px;
+            height: 24px;
+            background: var(--accent);
+            border-radius: 4px;
+            box-shadow: 0 0 10px var(--accent);
+        }
+
+        .demo-desc {
+            font-size: 15px;
+            color: var(--muted);
+            margin-bottom: 24px;
+            line-height: 1.6;
+            max-width: 90%;
+        }
+
+        /* Grid Lab Background for Visualization Stage */
+        .viz-area {
+            min-height: 200px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin-bottom: 24px;
+            padding: 30px;
+            border-radius: 16px;
+            border: 1px solid rgba(255, 255, 255, 0.04);
+            box-shadow: inset 0 10px 30px rgba(0, 0, 0, 0.5);
+            background-color: #0b0b12;
+            background-image:
+                linear-gradient(rgba(255, 255, 255, 0.02) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+            background-size: 20px 20px;
+            background-position: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .viz-area::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: radial-gradient(circle at center, transparent 40%, #0b0b12 100%);
+            pointer-events: none;
+        }
+
+        /* Tactile UI Elements */
+        .arr-box {
+            display: flex;
+            gap: 10px;
+            align-items: flex-end;
+            position: relative;
+            z-index: 1;
+        }
+
+        .arr-cell {
+            width: 54px;
+            height: 54px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 12px;
+            font-size: 18px;
+            font-weight: 600;
+            font-family: var(--font-mono);
+            background: #1e1e2d;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            color: var(--text);
+            transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.4), inset 0 2px 0 rgba(255, 255, 255, 0.05);
+        }
+
+        .arr-cell.highlight {
+            background: rgba(124, 106, 255, 0.2);
+            border-color: var(--accent);
+            color: var(--accent);
+            transform: translateY(-6px) scale(1.1);
+            box-shadow: 0 15px 25px rgba(0, 0, 0, 0.5), 0 0 20px rgba(124, 106, 255, 0.3), inset 0 2px 0 rgba(255, 255, 255, 0.2);
+            z-index: 2;
+        }
+
+        .arr-cell.compare {
+            background: rgba(255, 117, 160, 0.2);
+            border-color: var(--accent2);
+            color: var(--accent2);
+            transform: translateY(-4px) scale(1.05);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.5), 0 0 15px rgba(255, 117, 160, 0.3), inset 0 2px 0 rgba(255, 255, 255, 0.2);
+            z-index: 2;
+        }
+
+        .arr-cell.sorted {
+            background: rgba(79, 255, 229, 0.1);
+            border-color: rgba(79, 255, 229, 0.4);
+            color: var(--accent3);
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3), inset 0 2px 0 rgba(255, 255, 255, 0.1);
+        }
+
+        .arr-cell.pivot {
+            background: rgba(255, 206, 84, 0.2);
+            border-color: var(--accent4);
+            color: var(--accent4);
+            transform: translateY(-4px) scale(1.05);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.5), 0 0 15px rgba(255, 206, 84, 0.3);
+            z-index: 2;
+        }
+
+        .controls {
+            display: flex;
+            gap: 14px;
+            flex-wrap: wrap;
+            align-items: center;
+            background: rgba(20, 20, 30, 0.6);
+            padding: 16px 20px;
+            border-radius: 16px;
+            border: 1px solid rgba(255, 255, 255, 0.04);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border-radius: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            background: rgba(30, 30, 45, 0.8);
+            color: var(--text);
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            font-family: var(--font-head);
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+        }
+
+        .btn:hover {
+            border-color: var(--border-acc);
+            background: rgba(45, 40, 70, 0.9);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+        }
+
+        .btn.primary {
+            background: linear-gradient(135deg, #7c6aff, #c245f3);
+            border: none;
+            box-shadow: 0 6px 20px rgba(124, 106, 255, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.2);
+            color: #fff;
+            font-weight: 800;
+        }
+
+        .btn.primary:hover {
+            box-shadow: 0 8px 25px rgba(124, 106, 255, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.3);
+            filter: brightness(1.15);
+        }
+
+        .info-badge {
+            display: inline-block;
+            padding: 6px 12px;
+            border-radius: 8px;
+            font-size: 12px;
+            font-family: var(--font-mono);
+            font-weight: 600;
+            margin-right: 8px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .badge-step {
+            background: rgba(255, 117, 160, 0.1);
+            color: var(--accent2);
+            margin-left: auto;
+            box-shadow: inset 0 0 10px rgba(255, 117, 160, 0.05);
+        }
+
+        /* Animated Terminal Log */
+        .log {
+            font-size: 14px;
+            font-family: var(--font-mono);
+            color: var(--accent3);
+            margin-top: 20px;
+            min-height: 50px;
+            padding: 16px 20px;
+            background: #0b0b12;
+            border-radius: 12px;
+            border: 1px solid rgba(79, 255, 229, 0.2);
+            box-shadow: inset 0 4px 15px rgba(0, 0, 0, 0.6);
+            display: flex;
+            align-items: center;
+            justify-content: flex-start;
+            position: relative;
+            transition: all 0.1s ease;
+        }
+
+        .log::before {
+            content: '~$';
+            margin-right: 12px;
+            color: var(--accent);
+            font-size: 14px;
+            font-weight: 800;
+            opacity: 0.8;
+        }
+
+        .log.flash {
+            background: rgba(79, 255, 229, 0.1);
+            border-color: var(--accent3);
+            box-shadow: 0 0 15px rgba(79, 255, 229, 0.2), inset 0 4px 15px rgba(0, 0, 0, 0.6);
+        }
+
+        .tree-svg {
+            width: 100%;
+            overflow: visible;
+            position: relative;
+            z-index: 1;
+        }
+
+        /* DS Components Refinements */
+        .stack-viz {
+            display: flex;
+            flex-direction: column-reverse;
+            gap: 10px;
+            align-items: center;
+            position: relative;
+            z-index: 1;
+        }
+
+        .queue-viz {
+            display: flex;
+            flex-direction: row;
+            gap: 10px;
+            align-items: center;
+            position: relative;
+            z-index: 1;
+        }
+
+        .stack-item {
+            width: 160px;
+            padding: 16px;
+            background: #1e1e2d;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            text-align: center;
+            font-family: var(--font-mono);
+            font-size: 15px;
+            font-weight: 600;
+            transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3), inset 0 2px 0 rgba(255, 255, 255, 0.05);
+            text-wrap: nowrap;
+        }
+
+        .stack-item.top {
+            border-color: var(--accent);
+            color: var(--accent);
+            background: rgba(124, 106, 255, 0.1);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.4), 0 0 15px rgba(124, 106, 255, 0.2), inset 0 2px 0 rgba(255, 255, 255, 0.1);
+            transform: scale(1.05) translateY(-4px);
+        }
+
+        .stack-item.front {
+            border-color: var(--accent3);
+            color: var(--accent3);
+            background: rgba(79, 255, 229, 0.1);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.4), 0 0 15px rgba(79, 255, 229, 0.2);
+            transform: scale(1.05) translateX(-4px);
+        }
+
+        .stack-item.back {
+            border-color: var(--accent2);
+            color: var(--accent2);
+            background: rgba(255, 117, 160, 0.1);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.4), 0 0 15px rgba(255, 117, 160, 0.2);
+            transform: scale(1.05) translateX(4px);
+        }
+
+        .hash-table {
+            display: grid;
+            gap: 8px;
+            width: 100%;
+            max-width: 440px;
+            margin: 0 auto;
+            position: relative;
+            z-index: 1;
+        }
+
+        .hash-row {
+            display: flex;
+            gap: 12px;
+            align-items: stretch;
+            font-family: var(--font-mono);
+            font-size: 14px;
+        }
+
+        .hash-idx {
+            width: 40px;
+            color: var(--accent4);
+            text-align: right;
+            flex-shrink: 0;
+            font-weight: 600;
+            padding-top: 12px;
+            opacity: 0.8;
+        }
+
+        .hash-cell {
+            flex: 1;
+            padding: 12px 16px;
+            background: #1e1e2d;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+            min-height: 46px;
+            transition: all 0.3s;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.02);
+        }
+
+        .hash-cell.filled {
+            border-color: rgba(124, 106, 255, 0.5);
+            color: #fff;
+            background: rgba(124, 106, 255, 0.1);
+        }
+
+        .hash-cell.collision {
+            border-color: var(--accent4);
+            color: var(--accent4);
+            background: rgba(255, 206, 84, 0.1);
+            font-weight: 600;
+        }
+
+        .speed-row {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 12px;
+            color: var(--muted);
+            font-family: var(--font-mono);
+            font-weight: 600;
+            padding: 10px 16px;
+            background: rgba(0, 0, 0, 0.4);
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            margin-left: auto;
+            box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.5);
+        }
+
+        input[type=range].speed {
+            width: 120px;
+            accent-color: var(--accent);
+            cursor: pointer;
+            height: 4px;
+            border-radius: 2px;
+            background: rgba(255, 255, 255, 0.1);
+            appearance: none;
+        }
+
+        input[type=range].speed::-webkit-slider-thumb {
+            appearance: none;
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: var(--accent);
+            cursor: pointer;
+            box-shadow: 0 0 10px var(--accent);
+        }
+
+        .linked-viz {
+            display: flex;
+            align-items: center;
+            gap: 0;
+            flex-wrap: wrap;
+            justify-content: center;
+            position: relative;
+            z-index: 1;
+        }
+
+        .ln-node {
+            display: flex;
+            align-items: center;
+        }
+
+        .ln-box {
+            padding: 14px 20px;
+            background: #1e1e2d;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 12px;
+            font-family: var(--font-mono);
+            font-size: 16px;
+            font-weight: 600;
+            transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3), inset 0 2px 0 rgba(255, 255, 255, 0.05);
+        }
+
+        .ln-box:hover {
+            transform: translateY(-4px);
+            border-color: rgba(255, 255, 255, 0.2);
+        }
+
+        .ln-box.head {
+            border-color: var(--accent);
+            color: var(--accent);
+            background: rgba(124, 106, 255, 0.1);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.4), 0 0 15px rgba(124, 106, 255, 0.2);
+        }
+
+        .ln-box.tail {
+            border-color: var(--accent3);
+            color: var(--accent3);
+            background: rgba(79, 255, 229, 0.1);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.4), 0 0 15px rgba(79, 255, 229, 0.2);
+        }
+
+        .ln-arrow {
+            color: var(--muted);
+            font-size: 20px;
+            margin: 0 12px;
+            font-weight: 400;
+            animation: pulseArrow 2s infinite;
+        }
+
+        @keyframes pulseArrow {
+
+            0%,
+            100% {
+                opacity: 0.5;
+                transform: translateX(0);
+                color: var(--muted);
+            }
+
+            50% {
+                opacity: 1;
+                transform: translateX(4px);
+                color: var(--accent);
+            }
+        }
+
+        .dp-table {
+            display: inline-grid;
+            gap: 6px;
+            padding: 20px;
+            background: rgba(0, 0, 0, 0.4);
+            border-radius: 16px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            position: relative;
+            z-index: 1;
+            box-shadow: inset 0 5px 15px rgba(0, 0, 0, 0.5);
+        }
+
+        .dp-cell {
+            width: 48px;
+            height: 48px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 10px;
+            font-family: var(--font-mono);
+            font-size: 15px;
+            font-weight: 600;
+            background: #1e1e2d;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            transition: all 0.3s;
+            color: var(--muted);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        .dp-cell.filled {
+            background: rgba(124, 106, 255, 0.15);
+            border-color: rgba(124, 106, 255, 0.4);
+            color: var(--text);
+        }
+
+        .dp-cell.current {
+            background: rgba(255, 117, 160, 0.2);
+            border-color: var(--accent2);
+            color: #fff;
+            transform: scale(1.15);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.5), 0 0 15px rgba(255, 117, 160, 0.3);
+            z-index: 2;
+            position: relative;
+        }
+
+        .dp-cell.header {
+            background: transparent;
+            border-color: transparent;
+            color: var(--accent4);
+            font-size: 12px;
+            box-shadow: none;
+            opacity: 0.8;
+        }
+
+        .section-label {
+            font-size: 11px;
+            font-weight: 600;
+            font-family: var(--font-mono);
+            letter-spacing: 0.15em;
+            text-transform: uppercase;
+            color: var(--muted);
+            margin-bottom: 16px;
+            display: block;
+            width: 100%;
+            position: relative;
+            z-index: 1;
+            text-align: center;
+        }
+
+        .bar-viz {
+            display: flex;
+            align-items: flex-end;
+            gap: 6px;
+            height: 180px;
+            padding: 20px;
+            width: 100%;
+            justify-content: center;
+            position: relative;
+            z-index: 1;
+        }
+
+        .bar {
+            border-radius: 6px 6px 0 0;
+            background: linear-gradient(to top, rgba(30, 30, 45, 0.9), rgba(80, 80, 100, 0.9));
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-bottom: none;
+            transition: height 0.3s cubic-bezier(0.4, 0, 0.2, 1), transform 0.3s, background 0.3s, box-shadow 0.3s;
+            display: flex;
+            align-items: flex-start;
+            justify-content: center;
+            padding-top: 8px;
+            font-family: var(--font-mono);
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.6);
+            min-width: 38px;
+            box-shadow: 0 -5px 10px rgba(0, 0, 0, 0.3), inset 0 2px 2px rgba(255, 255, 255, 0.1);
+            font-weight: 600;
+        }
+
+        .bar.highlight {
+            background: linear-gradient(to top, rgba(124, 106, 255, 0.6), rgba(157, 140, 255, 0.9));
+            border-color: #fff;
+            color: #fff;
+            box-shadow: 0 -8px 25px rgba(124, 106, 255, 0.5), inset 0 2px 5px rgba(255, 255, 255, 0.5);
+            transform: translateY(-4px);
+            z-index: 2;
+        }
+
+        .bar.sorted {
+            background: linear-gradient(to top, rgba(79, 255, 229, 0.3), rgba(79, 255, 229, 0.8));
+            border-color: rgba(255, 255, 255, 0.5);
+            color: #000;
+            box-shadow: 0 -5px 15px rgba(79, 255, 229, 0.3);
+        }
+
+        .bar.pivot {
+            background: linear-gradient(to top, rgba(255, 206, 84, 0.5), rgba(255, 206, 84, 0.9));
+            border-color: #fff;
+            color: #000;
+            box-shadow: 0 -8px 20px rgba(255, 206, 84, 0.4);
+            transform: translateY(-2px);
+            z-index: 2;
+        }
+
+        .bar.compare {
+            background: linear-gradient(to top, rgba(255, 117, 160, 0.6), rgba(255, 117, 160, 0.9));
+            border-color: #fff;
+            color: #fff;
+            box-shadow: 0 -8px 20px rgba(255, 117, 160, 0.5);
+            transform: translateY(-2px);
+            z-index: 2;
+        }
+
+        /* Input fields */
+        input[type=number],
+        input[type=text],
+        #hash-key {
+            background: rgba(0, 0, 0, 0.5) !important;
+            border: 1px solid rgba(255, 255, 255, 0.1) !important;
+            color: var(--text) !important;
+            font-weight: 600;
+            outline: none;
+            transition: all 0.3s;
+            font-family: var(--font-mono);
+            box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.5);
+        }
+
+        input[type=number]:focus,
+        input[type=text]:focus,
+        #hash-key:focus {
+            border-color: var(--accent) !important;
+            background: rgba(0, 0, 0, 0.7) !important;
+            box-shadow: 0 0 0 2px rgba(124, 106, 255, 0.2), inset 0 2px 5px rgba(0, 0, 0, 0.5);
+        }
+
+        input::placeholder {
+            color: rgba(255, 255, 255, 0.2);
+        }
+    </style>
 </head>
+
 <body>
-<div id="app">
-  <div class="header">
-    <h1>DSA <span>Explorer</span></h1>
-    <p style="font-size: 12px; color: var(--muted); font-family: var(--font-mono); margin-top: 4px;">Interactive visualizations for every concept</p>
-  </div>
+    <div id="app">
+        <div class="header">
+            <h1>DSA <span>Explorer</span></h1>
+            <p
+                style="font-size: 13px; color: var(--muted); font-family: var(--font-mono); margin-top: 6px; opacity: 0.8;">
+                Interactive visualizations for algorithms & data structures</p>
+        </div>
 
-  <div class="tabs" id="tabs">
-    <div class="tab active" onclick="switchTab('sorting')">Sorting</div>
-    <div class="tab" onclick="switchTab('searching')">Searching</div>
-    <div class="tab" onclick="switchTab('ds')">Data Structures</div>
-    <div class="tab" onclick="switchTab('trees')">Trees</div>
-    <div class="tab" onclick="switchTab('graphs')">Graphs</div>
-    <div class="tab" onclick="switchTab('dp')">Dynamic Prog.</div>
-  </div>
+        <div class="tabs" id="tabs">
+            <div class="tab active" onclick="switchTab('sorting')">Sorting</div>
+            <div class="tab" onclick="switchTab('searching')">Searching</div>
+            <div class="tab" onclick="switchTab('ds')">Data Structures</div>
+            <div class="tab" onclick="switchTab('trees')">Trees</div>
+            <div class="tab" onclick="switchTab('graphs')">Graphs</div>
+            <div class="tab" onclick="switchTab('dp')">Dynamic Prog.</div>
+        </div>
 
-  <div class="content" id="content"></div>
-</div>
+        <div class="content" id="content"></div>
+    </div>
 
-<script>
-const DELAY = ms => new Promise(r => setTimeout(r, ms));
-let animating = false;
-let speedMs = 400;
+    <script>
+        const DELAY = ms => new Promise(r => setTimeout(r, ms));
+        let animating = false;
+        let speedMs = 400;
 
-function switchTab(t) {
-  document.querySelectorAll('.tab').forEach((el,i)=>{
-    const tabs = ['sorting','searching','ds','trees','graphs','dp'];
-    el.classList.toggle('active', tabs[i]===t);
-  });
-  animating = false;
-  const fns = {sorting:renderSorting, searching:renderSearching, ds:renderDS, trees:renderTrees, graphs:renderGraphs, dp:renderDP};
-  fns[t]();
-}
+        function switchTab(t) {
+            document.querySelectorAll('.tab').forEach((el, i) => {
+                const tabs = ['sorting', 'searching', 'ds', 'trees', 'graphs', 'dp'];
+                el.classList.toggle('active', tabs[i] === t);
+            });
+            animating = false;
+            const fns = { sorting: renderSorting, searching: renderSearching, ds: renderDS, trees: renderTrees, graphs: renderGraphs, dp: renderDP };
+            fns[t]();
+        }
 
-const algos = [
-  {id:'bubble', name:'Bubble Sort', icon:'🫧', time:'O(n²)', space:'O(1)'},
-  {id:'selection', name:'Selection Sort', icon:'🎯', time:'O(n²)', space:'O(1)'},
-  {id:'insertion', name:'Insertion Sort', icon:'🃏', time:'O(n²)', space:'O(1)'},
-  {id:'merge', name:'Merge Sort', icon:'🔀', time:'O(n log n)', space:'O(n)'},
-  {id:'quick', name:'Quick Sort', icon:'⚡', time:'O(n log n)', space:'O(log n)'},
-  {id:'heap', name:'Heap Sort', icon:'🏔️', time:'O(n log n)', space:'O(1)'},
-];
-let sortAlgo = 'bubble';
-let sortArr = [5,3,8,1,9,2,7,4,6];
-let sortSteps = 0;
+        /* UI Helper: Animate log to draw attention */
+        function updateLogText(msg) {
+            const l = document.getElementById('sort-log') || document.getElementById('search-log') || document.getElementById('ds-log') || document.getElementById('tree-log') || document.getElementById('graph-log') || document.getElementById('dp-log');
+            if (l) {
+                l.textContent = msg;
+                l.classList.remove('flash');
+                void l.offsetWidth; // trigger reflow
+                l.classList.add('flash');
+                setTimeout(() => l.classList.remove('flash'), 150);
+            }
+        }
 
-function renderSorting() {
-  document.getElementById('content').innerHTML = `
-    <div class="section-label">Choose Algorithm</div>
+        const algos = [
+            { id: 'bubble', name: 'Bubble Sort', icon: '🫧', time: 'O(n²)', space: 'O(1)' },
+            { id: 'selection', name: 'Selection Sort', icon: '🎯', time: 'O(n²)', space: 'O(1)' },
+            { id: 'insertion', name: 'Insertion Sort', icon: '🃏', time: 'O(n²)', space: 'O(1)' },
+            { id: 'merge', name: 'Merge Sort', icon: '🔀', time: 'O(n log n)', space: 'O(n)' },
+            { id: 'quick', name: 'Quick Sort', icon: '⚡', time: 'O(n log n)', space: 'O(log n)' },
+            { id: 'heap', name: 'Heap Sort', icon: '🏔️', time: 'O(n log n)', space: 'O(1)' },
+        ];
+        let sortAlgo = 'bubble';
+        let sortArr = [5, 3, 8, 1, 9, 2, 7, 4, 6];
+        let sortSteps = 0;
+
+        function renderSorting() {
+            document.getElementById('content').innerHTML = `
     <div class="topic-grid" id="algo-grid"></div>
     <div class="demo-area" id="sort-demo">
       <div class="demo-title" id="sort-title">Bubble Sort</div>
@@ -172,175 +928,174 @@ function renderSorting() {
         <button class="btn" onclick="resetSort()">↺ Reset</button>
         <button class="btn" onclick="shuffleSort()">⤮ Shuffle</button>
         <div class="speed-row">Speed: <input type="range" class="speed" min="50" max="800" value="400" oninput="speedMs=800-this.value+50"></div>
-        <span class="info-badge badge-step" id="step-badge">steps: 0</span>
+        <span class="info-badge badge-step" id="step-badge">STEPS: 0</span>
       </div>
-      <div class="log" id="sort-log">Press Visualize to start...</div>
+      <div class="log" id="sort-log">Select an algorithm and press Visualize to start...</div>
     </div>`;
 
-  const grid = document.getElementById('algo-grid');
-  algos.forEach(a => {
-    const d = document.createElement('div');
-    d.className = 'topic-btn' + (a.id===sortAlgo?' active':'');
-    d.innerHTML = `<div class="icon">${a.icon}</div><div class="name">${a.name}</div><div class="complexity">${a.time}</div>`;
-    d.onclick = () => { sortAlgo=a.id; animating=false; document.querySelectorAll('#algo-grid .topic-btn').forEach(b=>b.classList.remove('active')); d.classList.add('active'); updateSortInfo(); resetSort(); };
-    grid.appendChild(d);
-  });
-  updateSortInfo();
-  drawSortBars(sortArr, [], [], []);
-}
+            const grid = document.getElementById('algo-grid');
+            algos.forEach(a => {
+                const d = document.createElement('div');
+                d.className = 'topic-btn' + (a.id === sortAlgo ? ' active' : '');
+                d.innerHTML = `<div class="icon">${a.icon}</div><div class="name">${a.name}</div><div class="complexity">${a.time}</div>`;
+                d.onclick = () => { sortAlgo = a.id; animating = false; document.querySelectorAll('#algo-grid .topic-btn').forEach(b => b.classList.remove('active')); d.classList.add('active'); updateSortInfo(); resetSort(); };
+                grid.appendChild(d);
+            });
+            updateSortInfo();
+            drawSortBars(sortArr, [], [], []);
+        }
 
-function updateSortInfo() {
-  const a = algos.find(x=>x.id===sortAlgo);
-  if(!a) return;
-  document.getElementById('sort-title').textContent = a.name;
-  const descs = {
-    bubble:'Repeatedly swaps adjacent elements that are in the wrong order. Simple but slow.',
-    selection:'Finds the minimum element and places it at the correct position each pass.',
-    insertion:'Builds sorted portion one element at a time by inserting each into its place.',
-    merge:'Divides array in half recursively, then merges sorted halves back together.',
-    quick:'Picks a pivot, partitions elements around it, recursively sorts each side.',
-    heap:'Builds a max-heap, then extracts elements in sorted order.'
-  };
-  document.getElementById('sort-desc').textContent = descs[sortAlgo];
-  document.getElementById('sort-log').textContent = `Time: ${a.time} | Space: ${a.space} — Press Visualize`;
-}
+        function updateSortInfo() {
+            const a = algos.find(x => x.id === sortAlgo);
+            if (!a) return;
+            document.getElementById('sort-title').textContent = a.name;
+            const descs = {
+                bubble: 'Repeatedly swaps adjacent elements that are in the wrong order. Simple but inefficient.',
+                selection: 'Finds the minimum element and places it at the correct position each pass.',
+                insertion: 'Builds the sorted portion one element at a time by inserting each into its proper place.',
+                merge: 'Divides the array in half recursively, then gracefully merges the sorted halves back together.',
+                quick: 'Picks a pivot, partitions elements around it, and recursively sorts each side. Highly efficient.',
+                heap: 'Builds a max-heap, then extracts the maximum elements in sorted order.'
+            };
+            document.getElementById('sort-desc').textContent = descs[sortAlgo];
+            updateLogText(`Time: ${a.time} | Space: ${a.space} — Ready to visualize.`);
+        }
 
-function drawSortBars(arr, highlights=[], compares=[], sorted=[]) {
-  const viz = document.getElementById('sort-viz');
-  if(!viz) return;
-  const max = Math.max(...arr);
-  viz.innerHTML = '';
-  const wrap = document.createElement('div');
-  wrap.className = 'bar-viz';
-  arr.forEach((v,i) => {
-    const b = document.createElement('div');
-    b.className = 'bar' + (highlights.includes(i)?' highlight':'') + (compares.includes(i)?' compare':'') + (sorted.includes(i)?' sorted':'');
-    b.style.height = Math.round((v/max)*90) + 'px';
-    b.textContent = v;
-    wrap.appendChild(b);
-  });
-  viz.appendChild(wrap);
-}
+        function drawSortBars(arr, highlights = [], compares = [], sorted = []) {
+            const viz = document.getElementById('sort-viz');
+            if (!viz) return;
+            const max = Math.max(...arr);
+            viz.innerHTML = '';
+            const wrap = document.createElement('div');
+            wrap.className = 'bar-viz';
+            arr.forEach((v, i) => {
+                const b = document.createElement('div');
+                b.className = 'bar' + (highlights.includes(i) ? ' highlight' : '') + (compares.includes(i) ? ' compare' : '') + (sorted.includes(i) ? ' sorted' : '');
+                b.style.height = Math.round((v / max) * 140) + 'px';
+                b.textContent = v;
+                wrap.appendChild(b);
+            });
+            viz.appendChild(wrap);
+        }
 
-function setLog(msg) { const l = document.getElementById('sort-log'); if(l) l.textContent = msg; }
-function setSteps(n) { sortSteps=n; const b = document.getElementById('step-badge'); if(b) b.textContent = 'steps: '+n; }
+        function setSteps(n) { sortSteps = n; const b = document.getElementById('step-badge'); if (b) b.textContent = 'STEPS: ' + n; }
 
-async function runSort() {
-  if(animating) return;
-  animating = true;
-  sortSteps = 0;
-  let arr = [...sortArr];
-  const sorted = [];
+        async function runSort() {
+            if (animating) return;
+            animating = true;
+            sortSteps = 0;
+            let arr = [...sortArr];
+            const sorted = [];
 
-  if(sortAlgo==='bubble') {
-    for(let i=0;i<arr.length&&animating;i++) {
-      for(let j=0;j<arr.length-i-1&&animating;j++) {
-        setLog(`Comparing arr[${j}]=${arr[j]} and arr[${j+1}]=${arr[j+1]}`);
-        drawSortBars(arr,[j],[j+1],Array.from({length:i},(_,k)=>arr.length-1-k));
-        await DELAY(speedMs); setSteps(++sortSteps);
-        if(arr[j]>arr[j+1]) { [arr[j],arr[j+1]]=[arr[j+1],arr[j]]; setLog(`Swapped! → [${arr}]`); drawSortBars(arr,[j+1],[j],Array.from({length:i},(_,k)=>arr.length-1-k)); await DELAY(speedMs/2); }
-      }
-      sorted.push(arr.length-1-i);
-    }
-  } else if(sortAlgo==='selection') {
-    for(let i=0;i<arr.length&&animating;i++) {
-      let min=i;
-      for(let j=i+1;j<arr.length&&animating;j++) {
-        setLog(`Comparing arr[${j}]=${arr[j]} with min=${arr[min]}`);
-        drawSortBars(arr,[min],[j],[...sorted]);
-        await DELAY(speedMs); setSteps(++sortSteps);
-        if(arr[j]<arr[min]) min=j;
-      }
-      [arr[i],arr[min]]=[arr[min],arr[i]];
-      sorted.push(i);
-      setLog(`Placed ${arr[i]} at position ${i}`);
-      drawSortBars(arr,[],[],[...sorted]); await DELAY(speedMs);
-    }
-  } else if(sortAlgo==='insertion') {
-    for(let i=1;i<arr.length&&animating;i++) {
-      let key=arr[i], j=i-1;
-      while(j>=0&&arr[j]>key&&animating) {
-        setLog(`Moving ${arr[j]} right to make room for ${key}`);
-        arr[j+1]=arr[j]; j--;
-        drawSortBars(arr,[j+1],[i],[]); await DELAY(speedMs); setSteps(++sortSteps);
-      }
-      arr[j+1]=key;
-      setLog(`Inserted ${key} at position ${j+1}`);
-      drawSortBars(arr,[j+1],[],[]); await DELAY(speedMs/2);
-    }
-    drawSortBars(arr,[],[],arr.map((_,i)=>i));
-  } else if(sortAlgo==='merge') {
-    async function merge(a, l, m, r) {
-      let left=a.slice(l,m+1), right=a.slice(m+1,r+1), i=0,j=0,k=l;
-      while(i<left.length&&j<right.length&&animating) {
-        setLog(`Merging: comparing ${left[i]} and ${right[j]}`);
-        drawSortBars(a,[k],[],[]); await DELAY(speedMs); setSteps(++sortSteps);
-        if(left[i]<=right[j]) a[k++]=left[i++]; else a[k++]=right[j++];
-      }
-      while(i<left.length) a[k++]=left[i++];
-      while(j<right.length) a[k++]=right[j++];
-    }
-    async function mergeSort(a, l, r) {
-      if(l>=r||!animating) return;
-      let m=Math.floor((l+r)/2);
-      await mergeSort(a,l,m); await mergeSort(a,m+1,r);
-      await merge(a,l,m,r);
-      drawSortBars(a,[],[],[]); await DELAY(speedMs/2);
-    }
-    await mergeSort(arr,0,arr.length-1);
-    drawSortBars(arr,[],[],arr.map((_,i)=>i));
-  } else if(sortAlgo==='quick') {
-    const viz = document.getElementById('sort-viz');
-    async function partition(a,lo,hi) {
-      let pivot=a[hi], i=lo-1;
-      for(let j=lo;j<hi&&animating;j++) {
-        setLog(`Pivot=${pivot}. Comparing arr[${j}]=${a[j]}`);
-        const piv=[hi], comp=[j], high=[i>=lo?i:-1].filter(x=>x>=0);
-        const barWrap = viz.querySelector('.bar-viz');
-        if(barWrap) { barWrap.querySelectorAll('.bar').forEach((b,idx)=>{ b.className='bar'+(piv.includes(idx)?' pivot':'')+(comp.includes(idx)?' compare':'')+(high.includes(idx)?' highlight':''); }); }
-        await DELAY(speedMs); setSteps(++sortSteps);
-        if(a[j]<pivot) { i++; [a[i],a[j]]=[a[j],a[i]]; setLog(`Swap arr[${i}] and arr[${j}]`); }
-      }
-      [a[i+1],a[hi]]=[a[hi],a[i+1]];
-      return i+1;
-    }
-    async function quickSort(a,lo,hi) {
-      if(lo>=hi||!animating) return;
-      drawSortBars(a,[],[hi],[]);
-      let p=await partition(a,lo,hi);
-      drawSortBars(a,[p],[],[p]); await DELAY(speedMs/2);
-      await quickSort(a,lo,p-1); await quickSort(a,p+1,hi);
-    }
-    await quickSort(arr,0,arr.length-1);
-    drawSortBars(arr,[],[],arr.map((_,i)=>i));
-  } else if(sortAlgo==='heap') {
-    async function heapify(a,n,i) {
-      let largest=i, l=2*i+1, r=2*i+2;
-      if(l<n&&a[l]>a[largest]) largest=l;
-      if(r<n&&a[r]>a[largest]) largest=r;
-      if(largest!==i) { setLog(`Heapify: swapping ${a[i]} ↔ ${a[largest]}`); [a[i],a[largest]]=[a[largest],a[i]]; drawSortBars(a,[i,largest],[],sorted.map(x=>x)); await DELAY(speedMs); setSteps(++sortSteps); await heapify(a,n,largest); }
-    }
-    for(let i=Math.floor(arr.length/2)-1;i>=0&&animating;i--) await heapify(arr,arr.length,i);
-    for(let i=arr.length-1;i>0&&animating;i--) {
-      [arr[0],arr[i]]=[arr[i],arr[0]]; sorted.push(i);
-      setLog(`Extracted max=${arr[i]}, placed at index ${i}`);
-      drawSortBars(arr,[0],[],[...sorted]); await DELAY(speedMs); setSteps(++sortSteps);
-      await heapify(arr,i,0);
-    }
-    drawSortBars(arr,[],[],arr.map((_,i)=>i));
-  }
+            if (sortAlgo === 'bubble') {
+                for (let i = 0; i < arr.length && animating; i++) {
+                    for (let j = 0; j < arr.length - i - 1 && animating; j++) {
+                        updateLogText(`Comparing elements at index ${j} and ${j + 1}`);
+                        drawSortBars(arr, [j], [j + 1], Array.from({ length: i }, (_, k) => arr.length - 1 - k));
+                        await DELAY(speedMs); setSteps(++sortSteps);
+                        if (arr[j] > arr[j + 1]) { [arr[j], arr[j + 1]] = [arr[j + 1], arr[j]]; updateLogText(`Swapped! Array state: [${arr}]`); drawSortBars(arr, [j + 1], [j], Array.from({ length: i }, (_, k) => arr.length - 1 - k)); await DELAY(speedMs / 2); }
+                    }
+                    sorted.push(arr.length - 1 - i);
+                }
+            } else if (sortAlgo === 'selection') {
+                for (let i = 0; i < arr.length && animating; i++) {
+                    let min = i;
+                    for (let j = i + 1; j < arr.length && animating; j++) {
+                        updateLogText(`Scanning for minimum: comparing arr[${j}]=${arr[j]} with current min=${arr[min]}`);
+                        drawSortBars(arr, [min], [j], [...sorted]);
+                        await DELAY(speedMs); setSteps(++sortSteps);
+                        if (arr[j] < arr[min]) min = j;
+                    }
+                    [arr[i], arr[min]] = [arr[min], arr[i]];
+                    sorted.push(i);
+                    updateLogText(`Placed ${arr[i]} at its final position ${i}`);
+                    drawSortBars(arr, [], [], [...sorted]); await DELAY(speedMs);
+                }
+            } else if (sortAlgo === 'insertion') {
+                for (let i = 1; i < arr.length && animating; i++) {
+                    let key = arr[i], j = i - 1;
+                    while (j >= 0 && arr[j] > key && animating) {
+                        updateLogText(`Shifting ${arr[j]} to the right to make room for ${key}`);
+                        arr[j + 1] = arr[j]; j--;
+                        drawSortBars(arr, [j + 1], [i], []); await DELAY(speedMs); setSteps(++sortSteps);
+                    }
+                    arr[j + 1] = key;
+                    updateLogText(`Inserted ${key} at position ${j + 1}`);
+                    drawSortBars(arr, [j + 1], [], []); await DELAY(speedMs / 2);
+                }
+                drawSortBars(arr, [], [], arr.map((_, i) => i));
+            } else if (sortAlgo === 'merge') {
+                async function merge(a, l, m, r) {
+                    let left = a.slice(l, m + 1), right = a.slice(m + 1, r + 1), i = 0, j = 0, k = l;
+                    while (i < left.length && j < right.length && animating) {
+                        updateLogText(`Merging halves: comparing ${left[i]} and ${right[j]}`);
+                        drawSortBars(a, [k], [], []); await DELAY(speedMs); setSteps(++sortSteps);
+                        if (left[i] <= right[j]) a[k++] = left[i++]; else a[k++] = right[j++];
+                    }
+                    while (i < left.length) a[k++] = left[i++];
+                    while (j < right.length) a[k++] = right[j++];
+                }
+                async function mergeSort(a, l, r) {
+                    if (l >= r || !animating) return;
+                    let m = Math.floor((l + r) / 2);
+                    await mergeSort(a, l, m); await mergeSort(a, m + 1, r);
+                    await merge(a, l, m, r);
+                    drawSortBars(a, [], [], []); await DELAY(speedMs / 2);
+                }
+                await mergeSort(arr, 0, arr.length - 1);
+                drawSortBars(arr, [], [], arr.map((_, i) => i));
+            } else if (sortAlgo === 'quick') {
+                const viz = document.getElementById('sort-viz');
+                async function partition(a, lo, hi) {
+                    let pivot = a[hi], i = lo - 1;
+                    for (let j = lo; j < hi && animating; j++) {
+                        updateLogText(`Pivot=${pivot}. Evaluating arr[${j}]=${a[j]}`);
+                        const piv = [hi], comp = [j], high = [i >= lo ? i : -1].filter(x => x >= 0);
+                        const barWrap = viz.querySelector('.bar-viz');
+                        if (barWrap) { barWrap.querySelectorAll('.bar').forEach((b, idx) => { b.className = 'bar' + (piv.includes(idx) ? ' pivot' : '') + (comp.includes(idx) ? ' compare' : '') + (high.includes(idx) ? ' highlight' : ''); }); }
+                        await DELAY(speedMs); setSteps(++sortSteps);
+                        if (a[j] < pivot) { i++;[a[i], a[j]] = [a[j], a[i]]; updateLogText(`Swapping arr[${i}] and arr[${j}]`); }
+                    }
+                    [a[i + 1], a[hi]] = [a[hi], a[i + 1]];
+                    return i + 1;
+                }
+                async function quickSort(a, lo, hi) {
+                    if (lo >= hi || !animating) return;
+                    drawSortBars(a, [], [hi], []);
+                    let p = await partition(a, lo, hi);
+                    drawSortBars(a, [p], [], [p]); await DELAY(speedMs / 2);
+                    await quickSort(a, lo, p - 1); await quickSort(a, p + 1, hi);
+                }
+                await quickSort(arr, 0, arr.length - 1);
+                drawSortBars(arr, [], [], arr.map((_, i) => i));
+            } else if (sortAlgo === 'heap') {
+                async function heapify(a, n, i) {
+                    let largest = i, l = 2 * i + 1, r = 2 * i + 2;
+                    if (l < n && a[l] > a[largest]) largest = l;
+                    if (r < n && a[r] > a[largest]) largest = r;
+                    if (largest !== i) { updateLogText(`Heapify: swapping ${a[i]} ↔ ${a[largest]}`);[a[i], a[largest]] = [a[largest], a[i]]; drawSortBars(a, [i, largest], [], sorted.map(x => x)); await DELAY(speedMs); setSteps(++sortSteps); await heapify(a, n, largest); }
+                }
+                for (let i = Math.floor(arr.length / 2) - 1; i >= 0 && animating; i--) await heapify(arr, arr.length, i);
+                for (let i = arr.length - 1; i > 0 && animating; i--) {
+                    [arr[0], arr[i]] = [arr[i], arr[0]]; sorted.push(i);
+                    updateLogText(`Extracted max=${arr[i]}, placed at index ${i}`);
+                    drawSortBars(arr, [0], [], [...sorted]); await DELAY(speedMs); setSteps(++sortSteps);
+                    await heapify(arr, i, 0);
+                }
+                drawSortBars(arr, [], [], arr.map((_, i) => i));
+            }
 
-  if(animating) { setLog('✓ Sorted! Steps: '+sortSteps); animating=false; }
-}
+            if (animating) { updateLogText('Process Complete. Array sorted successfully in ' + sortSteps + ' steps.'); animating = false; }
+        }
 
-function resetSort() { animating=false; setSteps(0); drawSortBars(sortArr,[],[],[]); const l=document.getElementById('sort-log'); if(l) l.textContent='Press Visualize to start...'; }
-function shuffleSort() { animating=false; sortArr=[...sortArr].sort(()=>Math.random()-0.5); resetSort(); }
+        function resetSort() { animating = false; setSteps(0); drawSortBars(sortArr, [], [], []); updateLogText('Ready to visualize.'); }
+        function shuffleSort() { animating = false; sortArr = [...sortArr].sort(() => Math.random() - 0.5); resetSort(); }
 
-let searchArr = [1,3,5,8,12,15,19,23,28,31,36];
-let searchTarget = 19;
+        let searchArr = [1, 3, 5, 8, 12, 15, 19, 23, 28, 31, 36];
+        let searchTarget = 19;
 
-function renderSearching() {
-  document.getElementById('content').innerHTML = `
+        function renderSearching() {
+            document.getElementById('content').innerHTML = `
     <div class="topic-grid" style="grid-template-columns:repeat(2,1fr);max-width:400px;">
       <div class="topic-btn active" id="btn-linear" onclick="setSearch('linear')"><div class="icon">🔍</div><div class="name">Linear Search</div><div class="complexity">O(n)</div></div>
       <div class="topic-btn" id="btn-binary" onclick="setSearch('binary')"><div class="icon">🎯</div><div class="name">Binary Search</div><div class="complexity">O(log n)</div></div>
@@ -349,79 +1104,80 @@ function renderSearching() {
       <div class="demo-title" id="search-title">Linear Search</div>
       <div class="demo-desc" id="search-desc">Checks every element one by one from left to right.</div>
       <div class="viz-area" id="search-viz"></div>
-      <div class="controls" style="flex-wrap:wrap;gap:10px;">
+      <div class="controls" style="flex-wrap:wrap;gap:15px;">
         <button class="btn primary" onclick="runSearch()">▶ Search</button>
         <button class="btn" onclick="renderSearching()">↺ Reset</button>
-        <span style="font-size:12px;color:var(--muted);font-family:var(--font-mono);">Target:</span>
-        <input type="number" id="search-target" value="19" style="width:60px;padding:6px;background:var(--surface);border:1px solid var(--border);border-radius:6px;color:var(--text);font-family:var(--font-mono);font-size:12px;" min="1" max="40" onchange="searchTarget=+this.value">
+        <div style="display:flex;align-items:center;gap:8px;background:rgba(0,0,0,0.3);padding:6px 12px;border-radius:10px;border:1px solid rgba(255,255,255,0.05);">
+          <span style="font-size:12px;color:var(--muted);font-family:var(--font-mono);font-weight:600;">TARGET:</span>
+          <input type="number" id="search-target" value="19" style="width:60px;padding:6px;background:transparent;border:none;color:var(--text);font-family:var(--font-mono);font-size:14px;outline:none;" min="1" max="40" onchange="searchTarget=+this.value">
+        </div>
         <div class="speed-row">Speed: <input type="range" class="speed" min="50" max="800" value="400" oninput="speedMs=800-this.value+50"></div>
       </div>
       <div class="log" id="search-log">Array is sorted. Enter a target and press Search.</div>
     </div>`;
-  drawSearchArr(searchArr,[],[]);
-}
+            drawSearchArr(searchArr, [], []);
+        }
 
-let searchAlgo = 'linear';
-function setSearch(a) {
-  searchAlgo=a;
-  document.getElementById('btn-linear').classList.toggle('active',a==='linear');
-  document.getElementById('btn-binary').classList.toggle('active',a==='binary');
-  const descs={linear:'Checks every element one by one from left to right.',binary:'Divides the sorted array in half each step to narrow the search range.'};
-  document.getElementById('search-title').textContent = a==='linear'?'Linear Search':'Binary Search';
-  document.getElementById('search-desc').textContent = descs[a];
-}
+        let searchAlgo = 'linear';
+        function setSearch(a) {
+            searchAlgo = a;
+            document.getElementById('btn-linear').classList.toggle('active', a === 'linear');
+            document.getElementById('btn-binary').classList.toggle('active', a === 'binary');
+            const descs = { linear: 'Checks every element one by one from left to right sequentially.', binary: 'Divides the sorted array in half each step to narrow down the search range exponentially.' };
+            document.getElementById('search-title').textContent = a === 'linear' ? 'Linear Search' : 'Binary Search';
+            document.getElementById('search-desc').textContent = descs[a];
+        }
 
-function drawSearchArr(arr, highlights, found) {
-  const viz = document.getElementById('search-viz');
-  if(!viz) return;
-  viz.innerHTML = '';
-  const wrap = document.createElement('div');
-  wrap.className = 'arr-box';
-  arr.forEach((v,i)=>{
-    const c = document.createElement('div');
-    c.className = 'arr-cell'+(found.includes(i)?' sorted':highlights.includes(i)?' highlight':'');
-    c.textContent = v;
-    wrap.appendChild(c);
-  });
-  viz.appendChild(wrap);
-}
+        function drawSearchArr(arr, highlights, found) {
+            const viz = document.getElementById('search-viz');
+            if (!viz) return;
+            viz.innerHTML = '';
+            const wrap = document.createElement('div');
+            wrap.className = 'arr-box';
+            arr.forEach((v, i) => {
+                const c = document.createElement('div');
+                c.className = 'arr-cell' + (found.includes(i) ? ' sorted' : highlights.includes(i) ? ' highlight' : '');
+                c.textContent = v;
+                wrap.appendChild(c);
+            });
+            viz.appendChild(wrap);
+        }
 
-async function runSearch() {
-  if(animating) return;
-  animating = true;
-  const arr = searchArr, target = +document.getElementById('search-target').value;
-  const log = t => { const l=document.getElementById('search-log'); if(l) l.textContent=t; };
+        async function runSearch() {
+            if (animating) return;
+            animating = true;
+            const arr = searchArr, target = +document.getElementById('search-target').value;
 
-  if(searchAlgo==='linear') {
-    for(let i=0;i<arr.length&&animating;i++) {
-      log(`Checking index ${i}: ${arr[i]} ${arr[i]===target?'== TARGET!':'≠ '+target}`);
-      drawSearchArr(arr,[i],[]);
-      await DELAY(speedMs);
-      if(arr[i]===target) { drawSearchArr(arr,[],[i]); log(`✓ Found ${target} at index ${i}!`); animating=false; return; }
-    }
-    log(`✗ ${target} not found in array.`); animating=false;
-  } else {
-    let lo=0, hi=arr.length-1;
-    while(lo<=hi&&animating) {
-      let mid=Math.floor((lo+hi)/2);
-      log(`lo=${lo}, hi=${hi}, mid=${mid} → arr[mid]=${arr[mid]}`);
-      drawSearchArr(arr,[mid],[]);
-      await DELAY(speedMs);
-      if(arr[mid]===target) { drawSearchArr(arr,[],[mid]); log(`✓ Found ${target} at index ${mid}!`); animating=false; return; }
-      if(arr[mid]<target) { lo=mid+1; log(`${arr[mid]} < ${target}, search right half`); }
-      else { hi=mid-1; log(`${arr[mid]} > ${target}, search left half`); }
-      await DELAY(speedMs/2);
-    }
-    log(`✗ ${target} not found.`); animating=false;
-  }
-}
+            if (searchAlgo === 'linear') {
+                for (let i = 0; i < arr.length && animating; i++) {
+                    updateLogText(`Evaluating index ${i}: Value ${arr[i]} ${arr[i] === target ? '== TARGET!' : '≠ ' + target}`);
+                    drawSearchArr(arr, [i], []);
+                    await DELAY(speedMs);
+                    if (arr[i] === target) { drawSearchArr(arr, [], [i]); updateLogText(`✓ Success! Found ${target} at index ${i}.`); animating = false; return; }
+                }
+                updateLogText(`✗ Search failed. ${target} does not exist in the array.`); animating = false;
+            } else {
+                let lo = 0, hi = arr.length - 1;
+                while (lo <= hi && animating) {
+                    let mid = Math.floor((lo + hi) / 2);
+                    updateLogText(`Range [${lo} - ${hi}], checking mid point index ${mid} → arr[mid] = ${arr[mid]}`);
+                    drawSearchArr(arr, [mid], []);
+                    await DELAY(speedMs);
+                    if (arr[mid] === target) { drawSearchArr(arr, [], [mid]); updateLogText(`✓ Success! Found ${target} at index ${mid}.`); animating = false; return; }
+                    if (arr[mid] < target) { lo = mid + 1; updateLogText(`${arr[mid]} < ${target}, narrowing search to the right half.`); }
+                    else { hi = mid - 1; updateLogText(`${arr[mid]} > ${target}, narrowing search to the left half.`); }
+                    await DELAY(speedMs / 2);
+                }
+                updateLogText(`✗ Search failed. ${target} not found.`); animating = false;
+            }
+        }
 
-let dsData = [10,20,30,40,50];
-let dsQueue = [10,20,30];
-let linkedList = [5,12,8,25,3];
+        let dsData = [10, 20, 30, 40, 50];
+        let dsQueue = [10, 20, 30];
+        let linkedList = [5, 12, 8, 25, 3];
 
-function renderDS() {
-  document.getElementById('content').innerHTML = `
+        function renderDS() {
+            document.getElementById('content').innerHTML = `
     <div class="topic-grid">
       <div class="topic-btn active" onclick="setDS('array')"><div class="icon">📊</div><div class="name">Array</div><div class="complexity">Access: O(1)</div></div>
       <div class="topic-btn" onclick="setDS('stack')"><div class="icon">📚</div><div class="name">Stack</div><div class="complexity">Push/Pop: O(1)</div></div>
@@ -430,452 +1186,473 @@ function renderDS() {
       <div class="topic-btn" onclick="setDS('hash')"><div class="icon">#️⃣</div><div class="name">Hash Table</div><div class="complexity">Lookup: O(1) avg</div></div>
     </div>
     <div class="demo-area" id="ds-demo"></div>`;
-  document.querySelectorAll('.topic-btn').forEach((b,i)=>{
-    const types=['array','stack','queue','linked','hash'];
-    b.onclick=()=>{ document.querySelectorAll('.topic-btn').forEach(x=>x.classList.remove('active')); b.classList.add('active'); setDS(types[i]); };
-  });
-  setDS('array');
-}
+            document.querySelectorAll('.topic-btn').forEach((b, i) => {
+                const types = ['array', 'stack', 'queue', 'linked', 'hash'];
+                b.onclick = () => { document.querySelectorAll('.topic-btn').forEach(x => x.classList.remove('active')); b.classList.add('active'); setDS(types[i]); };
+            });
+            setDS('array');
+        }
 
-function setDS(type) {
-  const demo = document.getElementById('ds-demo');
-  if(!demo) return;
-  if(type==='array') {
-    dsData = [10,20,30,40,50];
-    demo.innerHTML = `<div class="demo-title">Array</div><div class="demo-desc">Contiguous memory. O(1) access by index, O(n) insert/delete.</div>
+        function setDS(type) {
+            const demo = document.getElementById('ds-demo');
+            if (!demo) return;
+            if (type === 'array') {
+                dsData = [10, 20, 30, 40, 50];
+                demo.innerHTML = `<div class="demo-title">Static Array</div><div class="demo-desc">Contiguous memory block. O(1) direct access by index, O(n) dynamic insertion.</div>
       <div class="viz-area" id="ds-viz"></div>
       <div class="controls">
         <button class="btn primary" onclick="dsArrayPush()">Push</button>
         <button class="btn" onclick="dsArrayPop()">Pop</button>
-        <input type="number" id="ds-idx" placeholder="idx" style="width:50px;padding:6px;background:var(--surface);border:1px solid var(--border);border-radius:6px;color:var(--text);font-family:var(--font-mono);font-size:12px;">
-        <button class="btn" onclick="dsArrayAccess()">Access[i]</button>
+        <div style="display:flex;align-items:center;gap:6px;margin-left:8px;">
+          <input type="number" id="ds-idx" placeholder="idx" style="width:60px;padding:8px 12px;border-radius:8px;">
+          <button class="btn" onclick="dsArrayAccess()">Access[i]</button>
+        </div>
       </div>
-      <div class="log" id="ds-log">Arrays have O(1) random access via index.</div>`;
-    drawDSArr(dsData);
-  } else if(type==='stack') {
-    dsData = [10,20,30];
-    demo.innerHTML = `<div class="demo-title">Stack (LIFO)</div><div class="demo-desc">Last In, First Out. Elements are pushed and popped from the top only.</div>
+      <div class="log" id="ds-log">Arrays provide true O(1) random access via memory offset calculation.</div>`;
+                drawDSArr(dsData);
+            } else if (type === 'stack') {
+                dsData = [10, 20, 30];
+                demo.innerHTML = `<div class="demo-title">Stack (LIFO)</div><div class="demo-desc">Last In, First Out. Elements are pushed and popped strictly from the top.</div>
       <div class="viz-area" id="ds-viz" style="align-items:flex-end;"></div>
       <div class="controls"><button class="btn primary" onclick="dsPush()">Push</button><button class="btn" onclick="dsPop()">Pop</button><button class="btn" onclick="dsPeek()">Peek</button></div>
-      <div class="log" id="ds-log">Stack: LIFO — top is the last pushed element.</div>`;
-    drawStack(dsData);
-  } else if(type==='queue') {
-    dsQueue = [10,20,30];
-    demo.innerHTML = `<div class="demo-title">Queue (FIFO)</div><div class="demo-desc">First In, First Out. Elements are added at the back and removed from the front.</div>
+      <div class="log" id="ds-log">Stack: LIFO architecture — operations happen strictly at one end.</div>`;
+                drawStack(dsData);
+            } else if (type === 'queue') {
+                dsQueue = [10, 20, 30];
+                demo.innerHTML = `<div class="demo-title">Queue (FIFO)</div><div class="demo-desc">First In, First Out. Elements enter at the back and are processed from the front.</div>
       <div class="viz-area" id="ds-viz"></div>
       <div class="controls"><button class="btn primary" onclick="dsEnqueue()">Enqueue</button><button class="btn" onclick="dsDequeue()">Dequeue</button></div>
-      <div class="log" id="ds-log">Queue: FIFO — first element in is first to leave.</div>`;
-    drawQueue(dsQueue);
-  } else if(type==='linked') {
-    linkedList = [5,12,8,25,3];
-    demo.innerHTML = `<div class="demo-title">Linked List</div><div class="demo-desc">Nodes connected by pointers. O(1) insert at head, O(n) search.</div>
+      <div class="log" id="ds-log">Queue: FIFO architecture — ensuring order of arrival is preserved.</div>`;
+                drawQueue(dsQueue);
+            } else if (type === 'linked') {
+                linkedList = [5, 12, 8, 25, 3];
+                demo.innerHTML = `<div class="demo-title">Singly Linked List</div><div class="demo-desc">Nodes scattered in memory, connected sequentially via reference pointers.</div>
       <div class="viz-area" id="ds-viz" style="flex-wrap:wrap;justify-content:flex-start;"></div>
       <div class="controls"><button class="btn primary" onclick="llPrepend()">Prepend</button><button class="btn" onclick="llAppend()">Append</button><button class="btn" onclick="llRemoveHead()">Remove Head</button></div>
-      <div class="log" id="ds-log">Each node holds data and a pointer to the next node.</div>`;
-    drawLinked(linkedList);
-  } else if(type==='hash') {
-    hashData = {};
-    demo.innerHTML = `<div class="demo-title">Hash Table</div><div class="demo-desc">Uses a hash function to map keys to indices. Average O(1) insert and lookup.</div>
+      <div class="log" id="ds-log">Each node structure holds a data value and a pointer to the next memory address.</div>`;
+                drawLinked(linkedList);
+            } else if (type === 'hash') {
+                hashData = {};
+                demo.innerHTML = `<div class="demo-title">Hash Table (Map)</div><div class="demo-desc">Uses a deterministic hash function to map string keys to numerical storage indices.</div>
       <div class="viz-area" id="ds-viz" style="flex-direction:column;align-items:flex-start;"></div>
       <div class="controls">
-        <input id="hash-key" placeholder="key" style="width:70px;padding:6px;background:var(--surface);border:1px solid var(--border);border-radius:6px;color:var(--text);font-family:var(--font-mono);font-size:12px;">
-        <button class="btn primary" onclick="hashInsert()">Insert</button>
-        <button class="btn" onclick="hashLookup()">Lookup</button>
+        <input id="hash-key" placeholder="Enter key..." style="width:120px;padding:8px 12px;border-radius:8px;">
+        <button class="btn primary" onclick="hashInsert()">Insert Key</button>
+        <button class="btn" onclick="hashLookup()">Lookup Key</button>
       </div>
-      <div class="log" id="ds-log">Hash function: sum of char codes % table size.</div>`;
-    drawHashTable({});
-  }
-}
+      <div class="log" id="ds-log">Hash Function: ∑ (char codes) % table capacity.</div>`;
+                drawHashTable({});
+            }
+        }
 
-let hashData = {};
-function hashFn(k) { let s=0; for(let c of k) s+=c.charCodeAt(0); return s%8; }
+        let hashData = {};
+        function hashFn(k) { let s = 0; for (let c of k) s += c.charCodeAt(0); return s % 8; }
 
-function drawHashTable(data) {
-  const viz = document.getElementById('ds-viz'); if(!viz) return;
-  viz.innerHTML = '';
-  const table = document.createElement('div'); table.className='hash-table'; table.style.width='100%';
-  for(let i=0;i<8;i++) {
-    const row = document.createElement('div'); row.className='hash-row';
-    const idx = document.createElement('div'); idx.className='hash-idx'; idx.textContent=i;
-    const cell = document.createElement('div');
-    const entries = Object.entries(data).filter(([k])=>hashFn(k)===i);
-    cell.className = 'hash-cell'+(entries.length>1?' collision':entries.length===1?' filled':'');
-    cell.textContent = entries.map(([k,v])=>`${k}: ${v}`).join(' → ');
-    row.appendChild(idx); row.appendChild(cell); table.appendChild(row);
-  }
-  viz.appendChild(table);
-}
+        function drawHashTable(data) {
+            const viz = document.getElementById('ds-viz'); if (!viz) return;
+            viz.innerHTML = '';
+            const table = document.createElement('div'); table.className = 'hash-table';
+            for (let i = 0; i < 8; i++) {
+                const row = document.createElement('div'); row.className = 'hash-row';
+                const idx = document.createElement('div'); idx.className = 'hash-idx'; idx.textContent = `[${i}]`;
+                const cell = document.createElement('div');
+                const entries = Object.entries(data).filter(([k]) => hashFn(k) === i);
+                cell.className = 'hash-cell' + (entries.length > 1 ? ' collision' : entries.length === 1 ? ' filled' : '');
+                cell.innerHTML = entries.length ? entries.map(([k, v]) => `<span style="color:var(--muted)">${k}:</span> ${v}`).join(' <span style="color:var(--accent2); margin:0 4px;">→</span> ') : '<span style="opacity:0.2">empty</span>';
+                row.appendChild(idx); row.appendChild(cell); table.appendChild(row);
+            }
+            viz.appendChild(table);
+        }
 
-function hashInsert() {
-  const k = document.getElementById('hash-key').value.trim();
-  if(!k) return;
-  const val = Math.floor(Math.random()*100)+1;
-  hashData[k] = val;
-  const idx = hashFn(k);
-  const l = document.getElementById('ds-log');
-  if(l) l.textContent = `hash("${k}") = ${idx} → inserted {${k}: ${val}}${Object.keys(hashData).filter(x=>hashFn(x)===idx).length>1?' ⚠ collision!':''}`;
-  drawHashTable(hashData);
-}
-function hashLookup() {
-  const k = document.getElementById('hash-key').value.trim();
-  const l = document.getElementById('ds-log');
-  if(!l) return;
-  if(hashData[k]!==undefined) l.textContent = `hash("${k}") = ${hashFn(k)} → found ${hashData[k]}`;
-  else l.textContent = `"${k}" not found in hash table.`;
-}
+        function hashInsert() {
+            const k = document.getElementById('hash-key').value.trim();
+            if (!k) return;
+            const val = Math.floor(Math.random() * 100) + 1;
+            hashData[k] = val;
+            const idx = hashFn(k);
+            updateLogText(`hash("${k}") = ${idx} → Mapped to bucket [${idx}]. ${Object.keys(hashData).filter(x => hashFn(x) === idx).length > 1 ? '⚠ Collision handled via chaining!' : ''}`);
+            drawHashTable(hashData);
+        }
+        function hashLookup() {
+            const k = document.getElementById('hash-key').value.trim();
+            if (hashData[k] !== undefined) updateLogText(`hash("${k}") = ${hashFn(k)} → Key found! Value is ${hashData[k]}`);
+            else updateLogText(`"${k}" does not exist in the table data.`);
+        }
 
-let pushCounter = 60;
-function dsArrayPush() { dsData.push(pushCounter); pushCounter+=10; drawDSArr(dsData); const l=document.getElementById('ds-log'); if(l)l.textContent=`Pushed ${pushCounter-10} to end. Length=${dsData.length}`; }
-function dsArrayPop() { if(!dsData.length) return; const v=dsData.pop(); drawDSArr(dsData); const l=document.getElementById('ds-log'); if(l)l.textContent=`Popped ${v}. Length=${dsData.length}`; }
-function dsArrayAccess() { const i=+document.getElementById('ds-idx').value; const l=document.getElementById('ds-log'); if(i<0||i>=dsData.length){if(l)l.textContent='Index out of bounds!';return;} drawDSArr(dsData,[i]); if(l)l.textContent=`arr[${i}] = ${dsData[i]} — O(1) direct access!`; }
-function drawDSArr(arr, hi=[]) {
-  const viz = document.getElementById('ds-viz'); if(!viz) return;
-  viz.innerHTML='';
-  const wrap=document.createElement('div'); wrap.className='arr-box';
-  arr.forEach((v,i)=>{ const c=document.createElement('div'); c.className='arr-cell'+(hi.includes(i)?' highlight':''); c.innerHTML=`<span>${v}</span>`; wrap.appendChild(c); });
-  viz.appendChild(wrap);
-}
+        let pushCounter = 60;
+        function dsArrayPush() { dsData.push(pushCounter); pushCounter += 10; drawDSArr(dsData); updateLogText(`Appended ${pushCounter - 10} to contiguous memory. New Length = ${dsData.length}`); }
+        function dsArrayPop() { if (!dsData.length) return; const v = dsData.pop(); drawDSArr(dsData); updateLogText(`Popped end value ${v}. Array contracted. Length = ${dsData.length}`); }
+        function dsArrayAccess() { const i = +document.getElementById('ds-idx').value; if (i < 0 || i >= dsData.length) { updateLogText('Exception: Index out of bound!'); return; } drawDSArr(dsData, [i]); updateLogText(`arr[${i}] resolved directly to memory address containing value ${dsData[i]}`); }
+        function drawDSArr(arr, hi = []) {
+            const viz = document.getElementById('ds-viz'); if (!viz) return;
+            viz.innerHTML = '';
+            const wrap = document.createElement('div'); wrap.className = 'arr-box';
+            arr.forEach((v, i) => { const c = document.createElement('div'); c.className = 'arr-cell' + (hi.includes(i) ? ' highlight' : ''); c.innerHTML = `<span>${v}</span>`; wrap.appendChild(c); });
+            viz.appendChild(wrap);
+        }
 
-let stackCounter = 40;
-function drawStack(data) {
-  const viz = document.getElementById('ds-viz'); if(!viz) return;
-  viz.innerHTML='';
-  const wrap=document.createElement('div'); wrap.className='stack-viz';
-  if(!data.length) { wrap.innerHTML='<span style="color:var(--muted);font-size:12px;font-family:var(--font-mono);">(empty)</span>'; }
-  data.forEach((v,i)=>{ const d=document.createElement('div'); d.className='stack-item'+(i===data.length-1?' top':''); d.textContent=v+(i===data.length-1?' ← top':''); wrap.appendChild(d); });
-  viz.appendChild(wrap);
-}
-function dsPush() { dsData.push(stackCounter); stackCounter+=10; drawStack(dsData); const l=document.getElementById('ds-log'); if(l)l.textContent=`Pushed ${stackCounter-10} onto top. Size=${dsData.length}`; }
-function dsPop() { if(!dsData.length)return; const v=dsData.pop(); drawStack(dsData); const l=document.getElementById('ds-log'); if(l)l.textContent=`Popped ${v} from top. Size=${dsData.length}`; }
-function dsPeek() { if(!dsData.length)return; const l=document.getElementById('ds-log'); if(l)l.textContent=`Peek: top element is ${dsData[dsData.length-1]}`; }
+        let stackCounter = 40;
+        function drawStack(data) {
+            const viz = document.getElementById('ds-viz'); if (!viz) return;
+            viz.innerHTML = '';
+            const wrap = document.createElement('div'); wrap.className = 'stack-viz';
+            if (!data.length) { wrap.innerHTML = '<span style="color:var(--muted);font-size:13px;font-family:var(--font-mono);">(stack is empty)</span>'; }
+            data.forEach((v, i) => { const d = document.createElement('div'); d.className = 'stack-item' + (i === data.length - 1 ? ' top' : ''); d.textContent = v + (i === data.length - 1 ? ' ⟵ TOP' : ''); wrap.appendChild(d); });
+            viz.appendChild(wrap);
+        }
+        function dsPush() { dsData.push(stackCounter); stackCounter += 10; drawStack(dsData); updateLogText(`Pushed ${stackCounter - 10} onto stack structure. Stack Depth = ${dsData.length}`); }
+        function dsPop() { if (!dsData.length) return; const v = dsData.pop(); drawStack(dsData); updateLogText(`Popped ${v} from TOP. Stack Depth = ${dsData.length}`); }
+        function dsPeek() { if (!dsData.length) return; updateLogText(`Peek command read TOP element: ${dsData[dsData.length - 1]}`); }
 
-let qCounter = 40;
-function drawQueue(data) {
-  const viz = document.getElementById('ds-viz'); if(!viz) return;
-  viz.innerHTML='';
-  const wrap=document.createElement('div'); wrap.className='queue-viz';
-  if(!data.length){wrap.innerHTML='<span style="color:var(--muted);font-size:12px;font-family:var(--font-mono);">(empty)</span>';}
-  data.forEach((v,i)=>{ const d=document.createElement('div'); d.className='stack-item'+(i===0?' front':i===data.length-1?' back':''); d.textContent=v+(i===0?' ←front':i===data.length-1?' ←back':''); wrap.appendChild(d); });
-  viz.appendChild(wrap);
-}
-function dsEnqueue() { dsQueue.push(qCounter); qCounter+=10; drawQueue(dsQueue); const l=document.getElementById('ds-log'); if(l)l.textContent=`Enqueued ${qCounter-10} at back. Size=${dsQueue.length}`; }
-function dsDequeue() { if(!dsQueue.length)return; const v=dsQueue.shift(); drawQueue(dsQueue); const l=document.getElementById('ds-log'); if(l)l.textContent=`Dequeued ${v} from front. Size=${dsQueue.length}`; }
+        let qCounter = 40;
+        function drawQueue(data) {
+            const viz = document.getElementById('ds-viz'); if (!viz) return;
+            viz.innerHTML = '';
+            const wrap = document.createElement('div'); wrap.className = 'queue-viz';
+            if (!data.length) { wrap.innerHTML = '<span style="color:var(--muted);font-size:13px;font-family:var(--font-mono);">(queue is empty)</span>'; }
+            data.forEach((v, i) => { const d = document.createElement('div'); d.className = 'stack-item' + (i === 0 ? ' front' : i === data.length - 1 ? ' back' : ''); d.textContent = v + (i === 0 ? ' ⟵ FRONT' : i === data.length - 1 ? ' ⟵ REAR' : ''); wrap.appendChild(d); });
+            viz.appendChild(wrap);
+        }
+        function dsEnqueue() { dsQueue.push(qCounter); qCounter += 10; drawQueue(dsQueue); updateLogText(`Enqueued ${qCounter - 10} to the REAR. Queue Size = ${dsQueue.length}`); }
+        function dsDequeue() { if (!dsQueue.length) return; const v = dsQueue.shift(); drawQueue(dsQueue); updateLogText(`Dequeued ${v} from the FRONT. Queue Size = ${dsQueue.length}`); }
 
-let llCounter = 99;
-function drawLinked(data) {
-  const viz = document.getElementById('ds-viz'); if(!viz) return;
-  viz.innerHTML='';
-  const wrap=document.createElement('div'); wrap.className='linked-viz';
-  if(!data.length){wrap.innerHTML='<span style="color:var(--muted);font-size:12px;font-family:var(--font-mono);">(empty list)</span>';}
-  data.forEach((v,i)=>{ const n=document.createElement('div'); n.className='ln-node'; const box=document.createElement('div'); box.className='ln-box'+(i===0?' head':i===data.length-1?' tail':''); box.textContent=v; n.appendChild(box); if(i<data.length-1){const arr=document.createElement('span'); arr.className='ln-arrow'; arr.textContent='→'; n.appendChild(arr);} wrap.appendChild(n); });
-  const null_n=document.createElement('span'); null_n.style.cssText='font-family:var(--font-mono);font-size:12px;color:var(--muted);margin-left:6px;'; null_n.textContent='→ null'; wrap.appendChild(null_n);
-  viz.appendChild(wrap);
-}
-function llPrepend() { linkedList.unshift(llCounter--); drawLinked(linkedList); const l=document.getElementById('ds-log'); if(l)l.textContent=`Prepended ${llCounter+1} as new head.`; }
-function llAppend() { linkedList.push(llCounter--); drawLinked(linkedList); const l=document.getElementById('ds-log'); if(l)l.textContent=`Appended ${llCounter+1} as new tail.`; }
-function llRemoveHead() { if(!linkedList.length)return; const v=linkedList.shift(); drawLinked(linkedList); const l=document.getElementById('ds-log'); if(l)l.textContent=`Removed head: ${v}. New head is ${linkedList[0]??'null'}`; }
+        let llCounter = 99;
+        function drawLinked(data) {
+            const viz = document.getElementById('ds-viz'); if (!viz) return;
+            viz.innerHTML = '';
+            const wrap = document.createElement('div'); wrap.className = 'linked-viz';
+            if (!data.length) { wrap.innerHTML = '<span style="color:var(--muted);font-size:13px;font-family:var(--font-mono);">(linked list empty)</span>'; }
+            data.forEach((v, i) => { const n = document.createElement('div'); n.className = 'ln-node'; const box = document.createElement('div'); box.className = 'ln-box' + (i === 0 ? ' head' : i === data.length - 1 ? ' tail' : ''); box.textContent = v; n.appendChild(box); if (i < data.length - 1) { const arr = document.createElement('span'); arr.className = 'ln-arrow'; arr.textContent = '→'; n.appendChild(arr); } wrap.appendChild(n); });
+            const null_n = document.createElement('span'); null_n.style.cssText = 'font-family:var(--font-mono);font-size:14px;color:rgba(255,255,255,0.3);margin-left:10px;font-weight:600;'; null_n.textContent = '→ NULL'; wrap.appendChild(null_n);
+            viz.appendChild(wrap);
+        }
+        function llPrepend() { linkedList.unshift(llCounter--); drawLinked(linkedList); updateLogText(`Instantiated new HEAD node holding ${llCounter + 1}.`); }
+        function llAppend() { linkedList.push(llCounter--); drawLinked(linkedList); updateLogText(`Pointer attached new TAIL node holding ${llCounter + 1}.`); }
+        function llRemoveHead() { if (!linkedList.length) return; const v = linkedList.shift(); drawLinked(linkedList); updateLogText(`Dereferenced HEAD node (${v}). Next node promoted to HEAD.`); }
 
-let bst = {val:15,left:{val:8,left:{val:3,left:null,right:null},right:{val:12,left:null,right:null}},right:{val:22,left:{val:18,left:null,right:null},right:{val:28,left:null,right:null}}};
-let treeMode = 'bst';
+        let bst = { val: 15, left: { val: 8, left: { val: 3, left: null, right: null }, right: { val: 12, left: null, right: null } }, right: { val: 22, left: { val: 18, left: null, right: null }, right: { val: 28, left: null, right: null } } };
+        let treeMode = 'bst';
 
-function renderTrees() {
-  document.getElementById('content').innerHTML = `
-    <div class="topic-grid" style="grid-template-columns:repeat(3,1fr);max-width:420px;">
-      <div class="topic-btn active" id="btn-bst" onclick="setTree('bst')"><div class="icon">🌲</div><div class="name">BST</div><div class="complexity">O(log n) avg</div></div>
-      <div class="topic-btn" id="btn-bfs" onclick="setTree('bfs')"><div class="icon">🌊</div><div class="name">BFS</div><div class="complexity">O(V+E)</div></div>
-      <div class="topic-btn" id="btn-dfs" onclick="setTree('dfs')"><div class="icon">🔱</div><div class="name">DFS</div><div class="complexity">O(V+E)</div></div>
+        function renderTrees() {
+            document.getElementById('content').innerHTML = `
+    <div class="topic-grid" style="grid-template-columns:repeat(3,1fr);max-width:440px;">
+      <div class="topic-btn active" id="btn-bst" onclick="setTree('bst')"><div class="icon">🌲</div><div class="name">BST Structure</div><div class="complexity">O(log n) avg</div></div>
+      <div class="topic-btn" id="btn-bfs" onclick="setTree('bfs')"><div class="icon">🌊</div><div class="name">Breadth-First</div><div class="complexity">O(V+E)</div></div>
+      <div class="topic-btn" id="btn-dfs" onclick="setTree('dfs')"><div class="icon">🔱</div><div class="name">Depth-First</div><div class="complexity">O(V+E)</div></div>
     </div>
     <div class="demo-area">
       <div class="demo-title" id="tree-title">Binary Search Tree</div>
-      <div class="demo-desc" id="tree-desc">Left child &lt; parent &lt; right child. Enables efficient search, insert, delete.</div>
-      <div id="tree-svg-wrap" style="overflow:auto;"></div>
-      <div class="controls" style="margin-top:12px;">
-        <input type="number" id="tree-val" placeholder="value" style="width:70px;padding:6px;background:var(--surface);border:1px solid var(--border);border-radius:6px;color:var(--text);font-family:var(--font-mono);font-size:12px;" min="1" max="50">
-        <button class="btn primary" id="tree-btn1" onclick="treeAction1()">Insert</button>
-        <button class="btn" id="tree-btn2" onclick="treeAction2()">Search</button>
+      <div class="demo-desc" id="tree-desc">Left sub-branch strictly &lt; parent node &lt; right sub-branch.</div>
+      <div class="viz-area">
+        <div id="tree-svg-wrap" style="overflow:auto; width: 100%; display: flex; justify-content: center;"></div>
+      </div>
+      <div class="controls">
+        <input type="number" id="tree-val" placeholder="Value" style="width:80px;padding:8px 12px;border-radius:8px;" min="1" max="50">
+        <button class="btn primary" id="tree-btn1" onclick="treeAction1()">Insert Node</button>
+        <button class="btn" id="tree-btn2" onclick="treeAction2()">Search Path</button>
         <div class="speed-row">Speed: <input type="range" class="speed" min="50" max="800" value="400" oninput="speedMs=800-this.value+50"></div>
       </div>
-      <div class="log" id="tree-log">BST: Left subtree contains smaller values, right contains larger.</div>
+      <div class="log" id="tree-log">BST initialized. Waiting for operation...</div>
     </div>`;
-  drawTree(bst, [], []);
-}
+            drawTree(bst, [], []);
+        }
 
-function setTree(mode) {
-  treeMode = mode;
-  animating = false;
-  ['bst','bfs','dfs'].forEach(m=>{ const b=document.getElementById('btn-'+m); if(b) b.classList.toggle('active',m===mode); });
-  const configs = {
-    bst:{title:'Binary Search Tree',desc:'Left child < parent < right child. Enables efficient search, insert, delete.',btn1:'Insert',btn2:'Search'},
-    bfs:{title:'BFS — Breadth First Search',desc:'Traverses level by level using a queue. Finds shortest path in unweighted graphs.',btn1:'▶ BFS',btn2:'Reset'},
-    dfs:{title:'DFS — Depth First Search',desc:'Explores as deep as possible before backtracking. Uses a stack (or recursion).',btn1:'▶ DFS',btn2:'Reset'},
-  };
-  const c=configs[mode];
-  document.getElementById('tree-title').textContent=c.title;
-  document.getElementById('tree-desc').textContent=c.desc;
-  document.getElementById('tree-btn1').textContent=c.btn1;
-  document.getElementById('tree-btn2').textContent=c.btn2;
-  document.getElementById('tree-log').textContent='Press the button above to animate traversal.';
-  drawTree(bst,[],[]);
-}
+        function setTree(mode) {
+            treeMode = mode;
+            animating = false;
+            ['bst', 'bfs', 'dfs'].forEach(m => { const b = document.getElementById('btn-' + m); if (b) b.classList.toggle('active', m === mode); });
+            const configs = {
+                bst: { title: 'Binary Search Tree', desc: 'Left child < parent < right child. Extremely efficient for hierarchical data lookups.', btn1: 'Insert Node', btn2: 'Search Path' },
+                bfs: { title: 'BFS Traversal', desc: 'Explores horizontal depth level by level utilizing a Queue buffer.', btn1: '▶ Run BFS', btn2: 'Reset Tree' },
+                dfs: { title: 'DFS Traversal', desc: 'Dives vertically deep down a branch before backtracking. Typically implemented via recursion or Stack.', btn1: '▶ Run DFS', btn2: 'Reset Tree' },
+            };
+            const c = configs[mode];
+            document.getElementById('tree-title').textContent = c.title;
+            document.getElementById('tree-desc').textContent = c.desc;
+            document.getElementById('tree-btn1').textContent = c.btn1;
+            document.getElementById('tree-btn2').textContent = c.btn2;
+            updateLogText('Traversal mode changed. Press the run button.');
+            drawTree(bst, [], []);
+        }
 
-function drawTree(root, highlighted=[], found=[]) {
-  const wrap = document.getElementById('tree-svg-wrap'); if(!wrap) return;
-  const W=340, H=200;
-  let svg = `<svg class="tree-svg" viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg">`;
-  function pos(depth, idx, total) { return {x: W/(total+1)*(idx+1), y: 30+depth*55}; }
-  function drawNode(node, depth, idx, total, parentPos) {
-    if(!node) return;
-    const p = pos(depth,idx,total);
-    if(parentPos) svg+=`<line x1="${parentPos.x}" y1="${parentPos.y}" x2="${p.x}" y2="${p.y}" stroke="#2a2a3e" stroke-width="1.5"/>`;
-    const isHL = highlighted.includes(node.val), isFound = found.includes(node.val);
-    svg+=`<circle cx="${p.x}" cy="${p.y}" r="18" fill="${isFound?'#0f2a28':isHL?'#2a1028':'#1a1a26'}" stroke="${isFound?'#6afff0':isHL?'#ff6a9b':'#7c6aff'}" stroke-width="2"/>`;
-    svg+=`<text x="${p.x}" y="${p.y}" text-anchor="middle" dominant-baseline="central" fill="${isFound?'#6afff0':isHL?'#ff6a9b':'#e8e8f0'}" font-size="11" font-family="JetBrains Mono,monospace" font-weight="700">${node.val}</text>`;
-    if(node.left) drawNode(node.left,depth+1,idx*2,total*2,p);
-    if(node.right) drawNode(node.right,depth+1,idx*2+1,total*2,p);
-  }
-  drawNode(root,0,0,1,null);
-  svg+='</svg>';
-  wrap.innerHTML=svg;
-}
+        function drawTree(root, highlighted = [], found = []) {
+            const wrap = document.getElementById('tree-svg-wrap'); if (!wrap) return;
+            const W = 420, H = 220;
+            let svg = `<svg class="tree-svg" viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg" style="max-width: 420px;">
+             <defs>
+               <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
+                 <feGaussianBlur stdDeviation="3" result="blur" />
+                 <feComposite in="SourceGraphic" in2="blur" operator="over" />
+               </filter>
+             </defs>`;
+            function pos(depth, idx, total) { return { x: W / (total + 1) * (idx + 1), y: 30 + depth * 60 }; }
+            function drawNode(node, depth, idx, total, parentPos) {
+                if (!node) return;
+                const p = pos(depth, idx, total);
+                if (parentPos) svg += `<line x1="${parentPos.x}" y1="${parentPos.y}" x2="${p.x}" y2="${p.y}" stroke="rgba(255,255,255,0.15)" stroke-width="2"/>`;
+                const isHL = highlighted.includes(node.val), isFound = found.includes(node.val);
+                const strokeColor = isFound ? '#4fffe5' : isHL ? '#ff75a0' : 'rgba(124, 106, 255, 0.8)';
+                const fillColor = isFound ? 'rgba(79, 255, 229, 0.15)' : isHL ? 'rgba(255, 117, 160, 0.2)' : '#1e1e2d';
+                svg += `<circle cx="${p.x}" cy="${p.y}" r="18" fill="${fillColor}" stroke="${strokeColor}" stroke-width="2.5" ${isFound || isHL ? 'filter="url(#glow)"' : ''}/>`;
+                svg += `<text x="${p.x}" y="${p.y}" text-anchor="middle" dominant-baseline="central" fill="${isFound ? '#fff' : isHL ? '#fff' : '#e8e8f0'}" font-size="12" font-family="JetBrains Mono,monospace" font-weight="600">${node.val}</text>`;
+                if (node.left) drawNode(node.left, depth + 1, idx * 2, total * 2, p);
+                if (node.right) drawNode(node.right, depth + 1, idx * 2 + 1, total * 2, p);
+            }
+            drawNode(root, 0, 0, 1, null);
+            svg += '</svg>';
+            wrap.innerHTML = svg;
+        }
 
-function insertBST(node, val) {
-  if(!node) return {val,left:null,right:null};
-  if(val<node.val) node.left=insertBST(node.left,val);
-  else if(val>node.val) node.right=insertBST(node.right,val);
-  return node;
-}
+        function insertBST(node, val) {
+            if (!node) return { val, left: null, right: null };
+            if (val < node.val) node.left = insertBST(node.left, val);
+            else if (val > node.val) node.right = insertBST(node.right, val);
+            return node;
+        }
 
-async function treeAction1() {
-  if(treeMode==='bst') {
-    const v=+document.getElementById('tree-val').value;
-    if(!v) return;
-    bst=insertBST(bst,v);
-    drawTree(bst,[v],[]);
-    document.getElementById('tree-log').textContent=`Inserted ${v} into BST.`;
-  } else {
-    if(animating) return;
-    animating=true;
-    const order=[]; const log=document.getElementById('tree-log');
-    if(treeMode==='bfs') {
-      const queue=[bst]; const visited=[];
-      while(queue.length&&animating) {
-        const node=queue.shift(); visited.push(node.val);
-        drawTree(bst,visited.slice(0,-1),[node.val]);
-        if(log) log.textContent=`BFS visiting: ${node.val} | Queue: [${queue.map(x=>x.val)}]`;
-        await DELAY(speedMs);
-        if(node.left) queue.push(node.left);
-        if(node.right) queue.push(node.right);
-      }
-      if(log) log.textContent=`BFS order: ${visited.join(' → ')}`;
-    } else {
-      async function dfs(node) { if(!node||!animating) return; order.push(node.val); drawTree(bst,order.slice(0,-1),[node.val]); if(log) log.textContent=`DFS visiting: ${node.val} | Visited: [${order}]`; await DELAY(speedMs); await dfs(node.left); await dfs(node.right); }
-      await dfs(bst);
-      if(log) log.textContent=`DFS pre-order: ${order.join(' → ')}`;
-    }
-    animating=false;
-  }
-}
-function treeAction2() {
-  if(treeMode==='bst') {
-    const v=+document.getElementById('tree-val').value;
-    if(!v) return;
-    const path=[];
-    let cur=bst;
-    while(cur) { path.push(cur.val); if(cur.val===v){break;} cur=v<cur.val?cur.left:cur.right; }
-    const found=path[path.length-1]===v;
-    drawTree(bst,path.slice(0,-1),found?[v]:[]);
-    const l=document.getElementById('tree-log');
-    if(l) l.textContent=found?`✓ Found ${v} in ${path.length} steps! Path: ${path.join(' → ')}`:`✗ ${v} not found. Path searched: ${path.join(' → ')}`;
-  } else { animating=false; drawTree(bst,[],[]); const l=document.getElementById('tree-log'); if(l) l.textContent='Reset.'; }
-}
+        async function treeAction1() {
+            if (treeMode === 'bst') {
+                const v = +document.getElementById('tree-val').value;
+                if (!v) return;
+                bst = insertBST(bst, v);
+                drawTree(bst, [v], []);
+                updateLogText(`Allocated new memory block. Inserted leaf ${v} into BST architecture.`);
+            } else {
+                if (animating) return;
+                animating = true;
+                const order = [];
+                if (treeMode === 'bfs') {
+                    const queue = [bst]; const visited = [];
+                    while (queue.length && animating) {
+                        const node = queue.shift(); visited.push(node.val);
+                        drawTree(bst, visited.slice(0, -1), [node.val]);
+                        updateLogText(`BFS Level Processing: visiting ${node.val}. Buffer Queue State: [${queue.map(x => x.val)}]`);
+                        await DELAY(speedMs);
+                        if (node.left) queue.push(node.left);
+                        if (node.right) queue.push(node.right);
+                    }
+                    updateLogText(`BFS traversal complete. Result Sequence: ${visited.join(' → ')}`);
+                } else {
+                    async function dfs(node) { if (!node || !animating) return; order.push(node.val); drawTree(bst, order.slice(0, -1), [node.val]); updateLogText(`DFS Stack dive: visiting ${node.val}. Traversal Path: [${order}]`); await DELAY(speedMs); await dfs(node.left); await dfs(node.right); }
+                    await dfs(bst);
+                    updateLogText(`DFS (Pre-Order) traversal complete. Result Sequence: ${order.join(' → ')}`);
+                }
+                animating = false;
+            }
+        }
+        function treeAction2() {
+            if (treeMode === 'bst') {
+                const v = +document.getElementById('tree-val').value;
+                if (!v) return;
+                const path = [];
+                let cur = bst;
+                while (cur) { path.push(cur.val); if (cur.val === v) { break; } cur = v < cur.val ? cur.left : cur.right; }
+                const found = path[path.length - 1] === v;
+                drawTree(bst, path.slice(0, -1), found ? [v] : []);
+                updateLogText(found ? `✓ Path resolved. Node ${v} located at depth ${path.length - 1}! Steps: ${path.join(' → ')}` : `✗ Traversal exhausted. Target ${v} does not map to any subtree.`);
+            } else { animating = false; drawTree(bst, [], []); updateLogText('Environment parameters reset to original state.'); }
+        }
 
-const GNODES = ['A','B','C','D','E','F'];
-const GEDGES = [['A','B'],['A','C'],['B','D'],['B','E'],['C','F'],['D','E'],['E','F']];
-const GPOS = {A:[80,50],B:[40,110],C:[160,110],D:[20,180],E:[90,180],F:[170,180]};
-let graphAlgo = 'bfs';
+        const GNODES = ['A', 'B', 'C', 'D', 'E', 'F'];
+        const GEDGES = [['A', 'B'], ['A', 'C'], ['B', 'D'], ['B', 'E'], ['C', 'F'], ['D', 'E'], ['E', 'F']];
+        const GPOS = { A: [120, 40], B: [50, 110], C: [190, 110], D: [30, 190], E: [120, 190], F: [210, 190] };
+        let graphAlgo = 'bfs';
 
-function renderGraphs() {
-  document.getElementById('content').innerHTML = `
-    <div class="topic-grid" style="grid-template-columns:repeat(2,1fr);max-width:280px;">
+        function renderGraphs() {
+            document.getElementById('content').innerHTML = `
+    <div class="topic-grid" style="grid-template-columns:repeat(2,1fr);max-width:320px;">
       <div class="topic-btn active" id="gbtn-bfs" onclick="setGraph('bfs')"><div class="icon">🌊</div><div class="name">BFS</div><div class="complexity">O(V+E)</div></div>
       <div class="topic-btn" id="gbtn-dfs" onclick="setGraph('dfs')"><div class="icon">🌀</div><div class="name">DFS</div><div class="complexity">O(V+E)</div></div>
       <div class="topic-btn" id="gbtn-dijkstra" onclick="setGraph('dijkstra')"><div class="icon">📍</div><div class="name">Dijkstra</div><div class="complexity">O(V²)</div></div>
       <div class="topic-btn" id="gbtn-topo" onclick="setGraph('topo')"><div class="icon">📐</div><div class="name">Topo Sort</div><div class="complexity">O(V+E)</div></div>
     </div>
     <div class="demo-area">
-      <div class="demo-title" id="graph-title">Graph BFS</div>
-      <div class="demo-desc" id="graph-desc">Explores neighbors level by level from a start node using a queue.</div>
-      <div class="viz-area"><div id="graph-canvas" style="width:240px;height:230px;position:relative;"></div></div>
+      <div class="demo-title" id="graph-title">Graph Traversal (BFS)</div>
+      <div class="demo-desc" id="graph-desc">Pings adjacent nodes radially outwards from a designated start point.</div>
+      <div class="viz-area">
+        <div id="graph-canvas" style="width:260px;height:240px;position:relative;"></div>
+      </div>
       <div class="controls">
-        <button class="btn primary" onclick="runGraph()">▶ Run from A</button>
-        <button class="btn" onclick="resetGraph()">↺ Reset</button>
+        <button class="btn primary" onclick="runGraph()">▶ Execute Trace</button>
+        <button class="btn" onclick="resetGraph()">↺ Reset Topology</button>
         <div class="speed-row">Speed: <input type="range" class="speed" min="50" max="800" value="400" oninput="speedMs=800-this.value+50"></div>
       </div>
-      <div class="log" id="graph-log">Press Run to animate the algorithm.</div>
+      <div class="log" id="graph-log">Graph instantiated. Press execute to deploy algorithm.</div>
     </div>`;
-  drawGraph([],[]);
-}
+            drawGraph([], []);
+        }
 
-function setGraph(a) {
-  graphAlgo=a; animating=false;
-  ['bfs','dfs','dijkstra','topo'].forEach(m=>{ const b=document.getElementById('gbtn-'+m); if(b) b.classList.toggle('active',m===a); });
-  const descs={bfs:'Explores neighbors level by level from a start node using a queue.',dfs:'Goes as deep as possible along each branch before backtracking.',dijkstra:"Finds shortest path from source to all nodes.",topo:'Orders nodes so all edges go forward — only valid for DAGs.'};
-  document.getElementById('graph-title').textContent={bfs:'Graph BFS',dfs:'Graph DFS',dijkstra:'Dijkstra Shortest Path',topo:'Topological Sort'}[a];
-  document.getElementById('graph-desc').textContent=descs[a];
-  document.getElementById('graph-log').textContent='Press Run to animate.';
-  drawGraph([],[]);
-}
+        function setGraph(a) {
+            graphAlgo = a; animating = false;
+            ['bfs', 'dfs', 'dijkstra', 'topo'].forEach(m => { const b = document.getElementById('gbtn-' + m); if (b) b.classList.toggle('active', m === a); });
+            const descs = { bfs: 'Pings adjacent nodes radially outwards from a designated start point.', dfs: 'Navigates the topology edge deep into a chain before returning.', dijkstra: "Calculates the mathematical absolute shortest path vector spanning the network.", topo: 'Sequences node dependencies so all directed edges align forward strictly.' };
+            document.getElementById('graph-title').textContent = { bfs: 'Graph Traversal (BFS)', dfs: 'Graph Routing (DFS)', dijkstra: 'Dijkstra Pathfinding', topo: 'Topological Vector Sort' }[a];
+            document.getElementById('graph-desc').textContent = descs[a];
+            updateLogText('Algorithm deployed in memory. Awaiting trace command.');
+            drawGraph([], []);
+        }
 
-function drawGraph(visited, current, path=[]) {
-  const canvas = document.getElementById('graph-canvas'); if(!canvas) return;
-  const W=240, H=230;
-  let svg=`<svg width="${W}" height="${H}" xmlns="http://www.w3.org/2000/svg">`;
-  GEDGES.forEach(([a,b])=>{
-    const inPath=path.some(([x,y])=>(x===a&&y===b)||(x===b&&y===a));
-    svg+=`<line x1="${GPOS[a][0]}" y1="${GPOS[a][1]}" x2="${GPOS[b][0]}" y2="${GPOS[b][1]}" stroke="${inPath?'#7c6aff':'#2a2a3e'}" stroke-width="${inPath?2.5:1.5}"/>`;
-  });
-  GNODES.forEach(n=>{
-    const [x,y]=GPOS[n];
-    const isVis=visited.includes(n), isCur=current.includes(n);
-    svg+=`<circle cx="${x}" cy="${y}" r="20" fill="${isCur?'#2a1028':isVis?'#0f2a28':'#1a1a26'}" stroke="${isCur?'#ff6a9b':isVis?'#6afff0':'#7c6aff'}" stroke-width="2"/>`;
-    svg+=`<text x="${x}" y="${y}" text-anchor="middle" dominant-baseline="central" fill="${isCur?'#ff6a9b':isVis?'#6afff0':'#e8e8f0'}" font-size="13" font-family="JetBrains Mono,monospace" font-weight="700">${n}</text>`;
-  });
-  svg+='</svg>';
-  canvas.innerHTML=svg;
-}
+        function drawGraph(visited, current, path = []) {
+            const canvas = document.getElementById('graph-canvas'); if (!canvas) return;
+            const W = 260, H = 240;
+            let svg = `<svg width="${W}" height="${H}" xmlns="http://www.w3.org/2000/svg" style="overflow:visible">
+             <defs>
+               <filter id="gglow" x="-20%" y="-20%" width="140%" height="140%">
+                 <feGaussianBlur stdDeviation="4" result="blur" />
+                 <feComposite in="SourceGraphic" in2="blur" operator="over" />
+               </filter>
+             </defs>`;
+            GEDGES.forEach(([a, b]) => {
+                const inPath = path.some(([x, y]) => (x === a && y === b) || (x === b && y === a));
+                svg += `<line x1="${GPOS[a][0]}" y1="${GPOS[a][1]}" x2="${GPOS[b][0]}" y2="${GPOS[b][1]}" stroke="${inPath ? 'var(--accent)' : 'rgba(255,255,255,0.1)'}" stroke-width="${inPath ? 3 : 2}" ${inPath ? 'filter="url(#gglow)"' : ''}/>`;
+            });
+            GNODES.forEach(n => {
+                const [x, y] = GPOS[n];
+                const isVis = visited.includes(n), isCur = current.includes(n);
+                const fill = isCur ? 'rgba(255, 117, 160, 0.2)' : isVis ? 'rgba(79, 255, 229, 0.15)' : '#1e1e2d';
+                const stroke = isCur ? '#ff75a0' : isVis ? '#4fffe5' : 'rgba(124, 106, 255, 0.6)';
+                svg += `<circle cx="${x}" cy="${y}" r="22" fill="${fill}" stroke="${stroke}" stroke-width="2.5" ${isCur || isVis ? 'filter="url(#gglow)"' : ''}/>`;
+                svg += `<text x="${x}" y="${y}" text-anchor="middle" dominant-baseline="central" fill="${isCur || isVis ? '#fff' : '#e8e8f0'}" font-size="14" font-family="JetBrains Mono,monospace" font-weight="600">${n}</text>`;
+            });
+            svg += '</svg>';
+            canvas.innerHTML = svg;
+        }
 
-const ADJ = {A:['B','C'],B:['A','D','E'],C:['A','F'],D:['B','E'],E:['B','D','F'],F:['C','E']};
+        const ADJ = { A: ['B', 'C'], B: ['A', 'D', 'E'], C: ['A', 'F'], D: ['B', 'E'], E: ['B', 'D', 'F'], F: ['C', 'E'] };
 
-async function runGraph() {
-  if(animating) return;
-  animating=true;
-  const log=t=>{const l=document.getElementById('graph-log');if(l)l.textContent=t;};
-  const visited=[], path=[];
-  if(graphAlgo==='bfs') {
-    const queue=['A'], seen=new Set(['A']);
-    while(queue.length&&animating) {
-      const cur=queue.shift(); visited.push(cur);
-      drawGraph(visited,[cur],path); log(`BFS visiting ${cur} | Queue: [${queue}] | Visited: [${visited}]`);
-      await DELAY(speedMs);
-      for(const nb of ADJ[cur]) { if(!seen.has(nb)){seen.add(nb);queue.push(nb);path.push([cur,nb]);} }
-    }
-    log(`BFS complete: ${visited.join(' → ')}`);
-  } else if(graphAlgo==='dfs') {
-    const seen=new Set();
-    async function dfs(n) { if(!n||seen.has(n)||!animating) return; seen.add(n); visited.push(n); drawGraph(visited,[n],path); log(`DFS visiting ${n} | Visited: [${visited}]`); await DELAY(speedMs); for(const nb of ADJ[n]) { if(!seen.has(nb)){path.push([n,nb]);await dfs(nb);} } }
-    await dfs('A'); log(`DFS complete: ${visited.join(' → ')}`);
-  } else if(graphAlgo==='dijkstra') {
-    const dist={A:0,B:Infinity,C:Infinity,D:Infinity,E:Infinity,F:Infinity};
-    const unvis=new Set(GNODES);
-    while(unvis.size&&animating) {
-      let u=[...unvis].reduce((a,b)=>dist[a]<dist[b]?a:b);
-      unvis.delete(u); visited.push(u);
-      drawGraph(visited,[u],path); log(`Processing ${u}: dist=${dist[u]} | ${GNODES.map(n=>`${n}:${dist[n]===Infinity?'∞':dist[n]}`).join(', ')}`);
-      await DELAY(speedMs);
-      for(const nb of ADJ[u]) { if(dist[u]+1<dist[nb]){dist[nb]=dist[u]+1;path.push([u,nb]);} }
-    }
-    log(`Shortest distances from A: ${GNODES.map(n=>`${n}=${dist[n]}`).join(', ')}`);
-  } else {
-    const order=[], seen=new Set();
-    async function dfs2(n){if(seen.has(n)||!animating)return;seen.add(n);visited.push(n);drawGraph(visited,[n],path);log(`Topo DFS: ${n}`);await DELAY(speedMs);for(const nb of ADJ[n])if(!seen.has(nb)){path.push([n,nb]);await dfs2(nb);}order.unshift(n);}
-    for(const n of GNODES) await dfs2(n);
-    log(`Topological order: ${order.join(' → ')}`);
-  }
-  animating=false;
-}
-function resetGraph() { animating=false; drawGraph([],[]); const l=document.getElementById('graph-log'); if(l)l.textContent='Press Run to animate.'; }
+        async function runGraph() {
+            if (animating) return;
+            animating = true;
+            const visited = [], path = [];
+            if (graphAlgo === 'bfs') {
+                const queue = ['A'], seen = new Set(['A']);
+                while (queue.length && animating) {
+                    const cur = queue.shift(); visited.push(cur);
+                    drawGraph(visited, [cur], path); updateLogText(`Processing Node [${cur}]. Queue Load: {${queue.join(',')}} | Visited State: {${visited.join(',')}}`);
+                    await DELAY(speedMs);
+                    for (const nb of ADJ[cur]) { if (!seen.has(nb)) { seen.add(nb); queue.push(nb); path.push([cur, nb]); } }
+                }
+                updateLogText(`BFS trace successful. Layer mapping completed: ${visited.join(' → ')}`);
+            } else if (graphAlgo === 'dfs') {
+                const seen = new Set();
+                async function dfs(n) { if (!n || seen.has(n) || !animating) return; seen.add(n); visited.push(n); drawGraph(visited, [n], path); updateLogText(`Deep Dive processing Node [${n}]. Active Chain: {${visited.join(' → ')}}`); await DELAY(speedMs); for (const nb of ADJ[n]) { if (!seen.has(nb)) { path.push([n, nb]); await dfs(nb); } } }
+                await dfs('A'); updateLogText(`DFS trace successful. Deepest routing paths explored: ${visited.join(' → ')}`);
+            } else if (graphAlgo === 'dijkstra') {
+                const dist = { A: 0, B: Infinity, C: Infinity, D: Infinity, E: Infinity, F: Infinity };
+                const unvis = new Set(GNODES);
+                while (unvis.size && animating) {
+                    let u = [...unvis].reduce((a, b) => dist[a] < dist[b] ? a : b);
+                    unvis.delete(u); visited.push(u);
+                    drawGraph(visited, [u], path); updateLogText(`Node [${u}] selected: calculated distance=${dist[u]}. Grid Vector: ${GNODES.map(n => `${n}:${dist[n] === Infinity ? '∞' : dist[n]}`).join(', ')}`);
+                    await DELAY(speedMs);
+                    for (const nb of ADJ[u]) { if (dist[u] + 1 < dist[nb]) { dist[nb] = dist[u] + 1; path.push([u, nb]); } }
+                }
+                updateLogText(`Optimal routing resolved. Vectors from root (A): ${GNODES.map(n => `[${n}]=${dist[n]}`).join(' | ')}`);
+            } else {
+                const order = [], seen = new Set();
+                async function dfs2(n) { if (seen.has(n) || !animating) return; seen.add(n); visited.push(n); drawGraph(visited, [n], path); updateLogText(`Evaluating dependencies for [${n}].`); await DELAY(speedMs); for (const nb of ADJ[n]) if (!seen.has(nb)) { path.push([n, nb]); await dfs2(nb); } order.unshift(n); }
+                for (const n of GNODES) await dfs2(n);
+                updateLogText(`Dependency mapping complete. Valid Topological sequence: ${order.join(' → ')}`);
+            }
+            animating = false;
+        }
+        function resetGraph() { animating = false; drawGraph([], []); updateLogText('Topology cache cleared. Awaiting next command.'); }
 
-let dpAlgo = 'fib';
-function renderDP() {
-  document.getElementById('content').innerHTML = `
-    <div class="topic-grid" style="grid-template-columns:repeat(3,1fr);max-width:420px;">
-      <div class="topic-btn active" id="dp-fib" onclick="setDP('fib')"><div class="icon">🐇</div><div class="name">Fibonacci</div><div class="complexity">O(n)</div></div>
-      <div class="topic-btn" id="dp-lis" onclick="setDP('lis')"><div class="icon">📈</div><div class="name">Longest Inc. Subseq.</div><div class="complexity">O(n²)</div></div>
-      <div class="topic-btn" id="dp-knapsack" onclick="setDP('knapsack')"><div class="icon">🎒</div><div class="name">0/1 Knapsack</div><div class="complexity">O(nW)</div></div>
+        let dpAlgo = 'fib';
+        function renderDP() {
+            document.getElementById('content').innerHTML = `
+    <div class="topic-grid" style="grid-template-columns:repeat(3,1fr);max-width:440px;">
+      <div class="topic-btn active" id="dp-fib" onclick="setDP('fib')"><div class="icon">🐇</div><div class="name">Fibonacci Math</div><div class="complexity">Time: O(n)</div></div>
+      <div class="topic-btn" id="dp-lis" onclick="setDP('lis')"><div class="icon">📈</div><div class="name">Longest Incr. Seq.</div><div class="complexity">Time: O(n²)</div></div>
+      <div class="topic-btn" id="dp-knapsack" onclick="setDP('knapsack')"><div class="icon">🎒</div><div class="name">0/1 Knapsack Grid</div><div class="complexity">Time: O(nW)</div></div>
     </div>
     <div class="demo-area">
-      <div class="demo-title" id="dp-title">Fibonacci (Memoization)</div>
-      <div class="demo-desc" id="dp-desc">Cache subproblem results to avoid recomputing. O(n) instead of O(2ⁿ).</div>
-      <div class="viz-area" id="dp-viz" style="flex-direction:column;align-items:flex-start;gap:6px;"></div>
+      <div class="demo-title" id="dp-title">Fibonacci sequence (Memoization)</div>
+      <div class="demo-desc" id="dp-desc">Caches calculated subproblem results in a 1D array to eliminate redundant recursive branches.</div>
+      <div class="viz-area" id="dp-viz" style="flex-direction:column;align-items:center;gap:12px;"></div>
       <div class="controls">
-        <button class="btn primary" onclick="runDP()">▶ Animate</button>
-        <button class="btn" onclick="renderDP()">↺ Reset</button>
+        <button class="btn primary" onclick="runDP()">▶ Compile Trace</button>
+        <button class="btn" onclick="renderDP()">↺ Reset Memory</button>
         <div class="speed-row">Speed: <input type="range" class="speed" min="50" max="800" value="400" oninput="speedMs=800-this.value+50"></div>
       </div>
-      <div class="log" id="dp-log">DP builds up solutions from smaller subproblems.</div>
+      <div class="log" id="dp-log">DP engine ready. Dynamic memory states initialized to NULL.</div>
     </div>`;
-  drawFibTable(Array(10).fill(null), -1);
-}
+            drawFibTable(Array(10).fill(null), -1);
+        }
 
-function setDP(a) {
-  dpAlgo=a; animating=false;
-  ['fib','lis','knapsack'].forEach(m=>{const b=document.getElementById('dp-'+m);if(b)b.classList.toggle('active',m===a);});
-  const titles={fib:'Fibonacci (Memoization)',lis:'Longest Increasing Subsequence',knapsack:'0/1 Knapsack Problem'};
-  const descs={fib:'Cache subproblem results to avoid recomputing. O(n) instead of O(2ⁿ).',lis:'Find the longest subsequence where each element is greater than the previous.',knapsack:'Maximize value of items in a bag without exceeding weight capacity.'};
-  document.getElementById('dp-title').textContent=titles[a];
-  document.getElementById('dp-desc').textContent=descs[a];
-  const viz=document.getElementById('dp-viz'); if(viz) viz.innerHTML='';
-  const l=document.getElementById('dp-log'); if(l) l.textContent='Press Animate to visualize.';
-  if(a==='fib') drawFibTable(Array(10).fill(null),-1);
-  else if(a==='lis') drawLISTable([4,2,8,5,1,9,3,6],Array(8).fill(1),-1);
-  else drawKnapsackGrid(Array(4).fill(null).map(()=>Array(7).fill(0)),-1,-1);
-}
+        function setDP(a) {
+            dpAlgo = a; animating = false;
+            ['fib', 'lis', 'knapsack'].forEach(m => { const b = document.getElementById('dp-' + m); if (b) b.classList.toggle('active', m === a); });
+            const titles = { fib: 'Fibonacci sequence (Memoization)', lis: 'Longest Increasing Subsequence', knapsack: '0/1 Knapsack Matrix Optimization' };
+            const descs = { fib: 'Caches calculated subproblem results in a 1D array to eliminate redundant recursive branches.', lis: 'Progressively identifies and logs lengths of strictly increasing array combinations.', knapsack: 'Constructs an optimization matrix to maximize inventory value under weight constraints.' };
+            document.getElementById('dp-title').textContent = titles[a];
+            document.getElementById('dp-desc').textContent = descs[a];
+            const viz = document.getElementById('dp-viz'); if (viz) viz.innerHTML = '';
+            updateLogText('Grid architecture switched. Press compile trace.');
+            if (a === 'fib') drawFibTable(Array(10).fill(null), -1);
+            else if (a === 'lis') drawLISTable([4, 2, 8, 5, 1, 9, 3, 6], Array(8).fill(1), -1);
+            else drawKnapsackGrid(Array(4).fill(null).map(() => Array(7).fill(0)), -1, -1);
+        }
 
-function drawFibTable(dp, cur) {
-  const viz=document.getElementById('dp-viz'); if(!viz) return;
-  viz.innerHTML='<div class="section-label">dp[i] = fib(i)</div>';
-  const row=document.createElement('div'); row.style.cssText='display:flex;gap:4px;flex-wrap:wrap;';
-  dp.forEach((v,i)=>{
-    const cell=document.createElement('div'); cell.className='dp-cell'+(i===cur?' current':v!==null?' filled':'');
-    cell.style.flexDirection='column'; cell.style.height='48px';
-    cell.innerHTML=`<span style="font-size:9px;color:var(--muted)">f(${i})</span><span>${v??''}</span>`;
-    row.appendChild(cell);
-  });
-  viz.appendChild(row);
-}
+        function drawFibTable(dp, cur) {
+            const viz = document.getElementById('dp-viz'); if (!viz) return;
+            viz.innerHTML = '<div class="section-label" style="text-align:left; margin-left: 20px;">Logic: dp[i] = dp[i-1] + dp[i-2]</div>';
+            const row = document.createElement('div'); row.style.cssText = 'display:flex;gap:6px;flex-wrap:wrap;justify-content:center;';
+            dp.forEach((v, i) => {
+                const cell = document.createElement('div'); cell.className = 'dp-cell' + (i === cur ? ' current' : v !== null ? ' filled' : '');
+                cell.style.flexDirection = 'column'; cell.style.height = '54px'; cell.style.width = '54px';
+                cell.innerHTML = `<span style="font-size:10px;color:rgba(255,255,255,0.4);margin-bottom:2px;">F(${i})</span><span style="color:${v !== null ? '#fff' : 'inherit'}">${v ?? '-'}</span>`;
+                row.appendChild(cell);
+            });
+            viz.appendChild(row);
+        }
 
-function drawLISTable(arr, dp, cur) {
-  const viz=document.getElementById('dp-viz'); if(!viz) return;
-  viz.innerHTML='<div class="section-label">Array: ['+arr+'] | dp[i] = LIS ending at i</div>';
-  const arrRow=document.createElement('div'); arrRow.style.cssText='display:flex;gap:4px;margin-bottom:6px;';
-  arr.forEach((v,i)=>{ const c=document.createElement('div'); c.className='dp-cell'+(i===cur?' current':''); c.textContent=v; arrRow.appendChild(c); });
-  const dpRow=document.createElement('div'); dpRow.style.cssText='display:flex;gap:4px;';
-  dp.forEach((v,i)=>{ const c=document.createElement('div'); c.className='dp-cell filled'; c.style.cssText='height:32px;font-size:10px;'; c.textContent='L:'+v; dpRow.appendChild(c); });
-  viz.appendChild(arrRow); viz.appendChild(dpRow);
-}
+        function drawLISTable(arr, dp, cur) {
+            const viz = document.getElementById('dp-viz'); if (!viz) return;
+            viz.innerHTML = '<div class="section-label" style="text-align:left; margin-left:20px;">Reference Source: Array [ ' + arr.join(', ') + ' ]</div>';
+            const dpRow = document.createElement('div'); dpRow.style.cssText = 'display:flex;gap:8px;';
+            dp.forEach((v, i) => {
+                const c = document.createElement('div');
+                c.className = 'dp-cell' + (i === cur ? ' current' : ' filled');
+                c.style.flexDirection = 'column';
+                c.innerHTML = `<span style="font-size:10px;color:rgba(255,255,255,0.5)">A[${i}] = ${arr[i]}</span><span style="color:var(--accent3); margin-top:2px; font-weight:800;">L: ${v}</span>`;
+                dpRow.appendChild(c);
+            });
+            viz.appendChild(dpRow);
+        }
 
-function drawKnapsackGrid(grid, curI, curW) {
-  const viz=document.getElementById('dp-viz'); if(!viz) return;
-  viz.innerHTML='<div class="section-label">Items: 3 | Weights: [2,3,4] | Values: [3,4,5] | Capacity: 6</div>';
-  const table=document.createElement('div'); table.className='dp-table'; table.style.gridTemplateColumns='repeat(8,36px)';
-  const hdr=['i\\w','0','1','2','3','4','5','6'];
-  hdr.forEach(h=>{ const c=document.createElement('div'); c.className='dp-cell header'; c.textContent=h; table.appendChild(c); });
-  grid.forEach((row,i)=>{ const lbl=document.createElement('div'); lbl.className='dp-cell header'; lbl.textContent='i='+i; table.appendChild(lbl); row.forEach((v,w)=>{ const c=document.createElement('div'); c.className='dp-cell'+(i===curI&&w===curW?' current':v>0?' filled':''); c.textContent=v||''; table.appendChild(c); }); });
-  viz.appendChild(table);
-}
+        function drawKnapsackGrid(grid, curI, curW) {
+            const viz = document.getElementById('dp-viz'); if (!viz) return;
+            viz.innerHTML = '<div class="section-label" style="text-align:center;">Entities: 3 | W: [2, 3, 4] | V: [3, 4, 5] | Max Cap: 6</div>';
+            const table = document.createElement('div'); table.className = 'dp-table'; table.style.gridTemplateColumns = 'repeat(8,40px)';
+            const hdr = ['(i\\w)', '0', '1', '2', '3', '4', '5', '6'];
+            hdr.forEach(h => { const c = document.createElement('div'); c.className = 'dp-cell header'; c.textContent = h; table.appendChild(c); });
+            grid.forEach((row, i) => { const lbl = document.createElement('div'); lbl.className = 'dp-cell header'; lbl.textContent = 'i=' + i; table.appendChild(lbl); row.forEach((v, w) => { const c = document.createElement('div'); c.className = 'dp-cell' + (i === curI && w === curW ? ' current' : v > 0 ? ' filled' : ''); c.textContent = v || '-'; table.appendChild(c); }); });
+            viz.appendChild(table);
+        }
 
-async function runDP() {
-  if(animating) return; animating=true;
-  const log=t=>{const l=document.getElementById('dp-log');if(l)l.textContent=t;};
-  if(dpAlgo==='fib') {
-    const dp=Array(10).fill(null); dp[0]=0; dp[1]=1;
-    drawFibTable(dp,1); await DELAY(speedMs);
-    for(let i=2;i<10&&animating;i++) { dp[i]=dp[i-1]+dp[i-2]; log(`fib(${i}) = fib(${i-1}) + fib(${i-2}) = ${dp[i-1]} + ${dp[i-2]} = ${dp[i]}`); drawFibTable(dp,i); await DELAY(speedMs); }
-    log(`Final: [${dp}]`);
-  } else if(dpAlgo==='lis') {
-    const arr=[4,2,8,5,1,9,3,6], dp=Array(8).fill(1);
-    for(let i=1;i<arr.length&&animating;i++) { for(let j=0;j<i&&animating;j++) { log(`Checking if arr[${j}]=${arr[j]} < arr[${i}]=${arr[i]}: ${arr[j]<arr[i]?'Yes':'No'}`); drawLISTable(arr,dp,i); await DELAY(speedMs/1.5); if(arr[j]<arr[i]) dp[i]=Math.max(dp[i],dp[j]+1); } }
-    drawLISTable(arr,dp,-1); log(`LIS lengths: [${dp}] | LIS = ${Math.max(...dp)}`);
-  } else {
-    const W=[0,2,3,4], V=[0,3,4,5], cap=6;
-    const grid=Array(4).fill(null).map(()=>Array(7).fill(0));
-    for(let i=1;i<=3&&animating;i++) { for(let w=0;w<=cap&&animating;w++) { if(W[i]<=w) grid[i][w]=Math.max(grid[i-1][w], V[i]+grid[i-1][w-W[i]]); else grid[i][w]=grid[i-1][w]; log(`Item ${i} (w=${W[i]},v=${V[i]}): dp[${i}][${w}] = ${grid[i][w]}`); drawKnapsackGrid(grid,i,w); await DELAY(speedMs/2); } }
-    log(`Max value = ${grid[3][6]} for capacity ${cap}`);
-  }
-  animating=false;
-}
+        async function runDP() {
+            if (animating) return; animating = true;
+            if (dpAlgo === 'fib') {
+                const dp = Array(10).fill(null); dp[0] = 0; dp[1] = 1;
+                drawFibTable(dp, 1); await DELAY(speedMs);
+                for (let i = 2; i < 10 && animating; i++) { dp[i] = dp[i - 1] + dp[i - 2]; updateLogText(`Engine computing index ${i} => F(${i - 1})[${dp[i - 1]}] + F(${i - 2})[${dp[i - 2]}] = ${dp[i]}`); drawFibTable(dp, i); await DELAY(speedMs); }
+                updateLogText(`Compilation completed. Final sequence vector generated.`);
+            } else if (dpAlgo === 'lis') {
+                const arr = [4, 2, 8, 5, 1, 9, 3, 6], dp = Array(8).fill(1);
+                for (let i = 1; i < arr.length && animating; i++) { for (let j = 0; j < i && animating; j++) { updateLogText(`Validating condition: arr[${j}]=${arr[j]} < arr[${i}]=${arr[i]} ? → ${arr[j] < arr[i] ? 'PASS (increment sequence)' : 'FAIL'}`); drawLISTable(arr, dp, i); await DELAY(speedMs / 1.5); if (arr[j] < arr[i]) dp[i] = Math.max(dp[i], dp[j] + 1); } }
+                drawLISTable(arr, dp, -1); updateLogText(`Scanning sequence complete. Maximum scalar chain discovered = ${Math.max(...dp)}.`);
+            } else {
+                const W = [0, 2, 3, 4], V = [0, 3, 4, 5], cap = 6;
+                const grid = Array(4).fill(null).map(() => Array(7).fill(0));
+                for (let i = 1; i <= 3 && animating; i++) { for (let w = 0; w <= cap && animating; w++) { if (W[i] <= w) grid[i][w] = Math.max(grid[i - 1][w], V[i] + grid[i - 1][w - W[i]]); else grid[i][w] = grid[i - 1][w]; updateLogText(`Analyzing Entity ${i} (W=${W[i]},V=${V[i]}): Matrix slot DP[${i}][${w}] assigned optimized value ${grid[i][w]}`); drawKnapsackGrid(grid, i, w); await DELAY(speedMs / 2); } }
+                updateLogText(`Matrix resolved. Absolute maximum theoretical value = ${grid[3][6]} under capacity limit ${cap}.`);
+            }
+            animating = false;
+        }
 
-renderSorting();
-</script>
+        renderSorting();
+    </script>
 </body>
+
 </html>
