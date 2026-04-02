@@ -473,6 +473,26 @@
             box-shadow: 0 0 15px rgba(79, 255, 229, 0.2), inset 0 4px 15px rgba(0, 0, 0, 0.6);
         }
 
+        .iso-3d {
+            transform: perspective(1200px) rotateX(60deg) rotateZ(-45deg);
+            transform-style: preserve-3d;
+            transition: transform 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+            margin-top: 60px !important;
+            margin-bottom: 60px !important;
+        }
+        .iso-3d .dp-cell, .iso-3d .dp-cell.header {
+            transform-style: preserve-3d;
+            transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1), background 0.4s;
+            box-shadow: -1px 1px 0 #333, -2px 2px 0 #222;
+        }
+        .iso-3d .dp-cell.filled {
+            box-shadow: -1px 1px 0 #5444b0, -2px 2px 0 #4a3a99, -3px 3px 0 #3b2e7a, -4px 4px 6px rgba(0,0,0,0.5);
+        }
+        .iso-3d .dp-table {
+            border: none;
+            box-shadow: none;
+        }
+
         .tree-svg {
             width: 100%;
             overflow: visible;
@@ -1138,11 +1158,16 @@
 
 <body>
     <div id="app">
-        <div class="header">
-            <h1>DSA <span>Explorer</span></h1>
-            <p
-                style="font-size: 13px; color: var(--muted); font-family: var(--font-mono); margin-top: 6px; opacity: 0.8;">
-                Interactive visualizations for algorithms & data structures</p>
+        <div class="header" style="display:flex; justify-content:space-between; align-items:flex-end; flex-wrap:wrap; gap:20px;">
+            <div>
+                <h1>DSA <span>Explorer</span></h1>
+                <p style="font-size: 13px; color: var(--muted); font-family: var(--font-mono); margin-top: 6px; opacity: 0.8;">Interactive visualizations for algorithms & data structures</p>
+            </div>
+            <div style="display:flex; gap:10px; align-items:center; background:rgba(0,0,0,0.3); padding:8px 12px; border-radius:12px; border:1px solid rgba(255,255,255,0.05);">
+                <span style="font-size:16px;">🔥</span>
+                <input type="text" id="lc-search" placeholder="Enter LeetCode URL..." style="width:220px; padding:6px 10px; border-radius:6px; border:1px solid rgba(255,255,255,0.1); background:#1b163d; color:#fff; font-family:var(--font-mono); font-size:12px; outline:none;" onkeydown="if(event.key==='Enter')parseLeetCode()">
+                <button class="btn" style="padding:6px 12px; font-size:11px;" onclick="parseLeetCode()">Parse Logic</button>
+            </div>
         </div>
 
         <div class="tabs" id="tabs">
@@ -1163,6 +1188,7 @@
             constructor() { this.states = []; this.isRecording = false; this.playIdx = 0; this.timer = null; }
             record() {
                 if (!this.isRecording) return;
+                if (this.states.length > 2000) return; // Circuit breaker to prevent RAM exhaustion
                 const vizs = Array.from(document.querySelectorAll('.viz-area')).map(el => el.innerHTML);
                 const log = document.querySelector('.log');
                 const pip = document.getElementById('pip-code');
@@ -1212,7 +1238,8 @@
                 <button class="btn primary" style="padding:4px 8px; font-size:11px;" onclick="if(Scrubber.timer) Scrubber.pause(); else Scrubber.play(speedMs);">⏯ Play</button>
                 <button class="btn" style="padding:4px 8px; font-size:11px;" onclick="Scrubber.pause(); Scrubber.playIdx<Scrubber.states.length-1 && Scrubber.applyFrame(Scrubber.playIdx+1)">⏭ Fwd</button>
                 <input type="range" id="tt-scrub" min="0" max="${Math.max(0, Scrubber.states.length-1)}" value="0" style="flex:1; accent-color:var(--accent3);" oninput="Scrubber.applyFrame(+this.value); Scrubber.pause();">
-                <span style="font-size:11px; font-family:var(--font-mono); color:var(--muted);"><span id="tt-current">0</span> / <span id="tt-max">${Math.max(0, Scrubber.states.length-1)}</span></span>`;
+                <span style="font-size:11px; font-family:var(--font-mono); color:var(--muted);"><span id="tt-current">0</span> / <span id="tt-max">${Math.max(0, Scrubber.states.length-1)}</span></span>
+                <button class="btn" id="export-btn" style="padding:4px 8px; font-size:11px; margin-left:10px; background:#4a3a99; border-color:#5444b0; color:#fff;" onclick="exportTraceVideo();">⏺ Export .webm</button>`;
                 controls.appendChild(div);
             } else if (document.getElementById('tt-scrub')) {
                 document.getElementById('tt-scrub').max = Math.max(0, Scrubber.states.length - 1);
@@ -1224,12 +1251,140 @@
         let animating = false;
         let speedMs = 400;
 
+        function parseLeetCode() {
+            const val = document.getElementById('lc-search').value.toLowerCase().trim();
+            if(!val) return;
+            const btn = document.querySelector('.header button');
+            if (btn) { btn.innerHTML = '⚡ Scanning...'; btn.style.pointerEvents = 'none'; }
+            
+            let slug = val;
+            try {
+                if (val.startsWith('http')) {
+                    const parts = val.split('/problems/')[1];
+                    if (parts) slug = parts.split('/')[0];
+                }
+            } catch(e) {}
+            
+            setTimeout(() => {
+                if (btn) { btn.innerHTML = 'Parse Logic'; btn.style.pointerEvents = 'auto'; }
+                
+                let foundType = "Optimization Engine";
+                if (slug.includes('sum') || slug.includes('water') || slug.includes('two-sum') || slug.includes('pair')) {
+                    switchTab('patterns'); setTimeout(() => setPattern('twopointers'), 10);
+                    foundType = 'Two Pointers Heuristic';
+                } else if (slug.includes('island') || slug.includes('path') || slug.includes('graph') || slug.includes('network') || slug.includes('connection')) {
+                    switchTab('graphs'); setTimeout(() => setGraph(slug.includes('path') ? 'dijkstra' : 'dfs'), 10);
+                    foundType = 'Graph Topology Analysis';
+                } else if (slug.includes('stairs') || slug.includes('dp') || slug.includes('matrix') || slug.includes('knapsack') || slug.includes('subsequence')) {
+                    switchTab('dp'); setTimeout(() => setDP(slug.includes('subsequence') ? 'lcs' : 'stairs'), 10);
+                    foundType = 'Dynamic Programming Logic';
+                } else if (slug.includes('coin') || slug.includes('greedy') || slug.includes('change')) {
+                    switchTab('patterns'); setTimeout(() => setPattern('greedy'), 10);
+                    foundType = 'Greedy Optimization Mapping';
+                } else if (slug.includes('window') || slug.includes('substring') || slug.includes('subarray')) {
+                    switchTab('patterns'); setTimeout(() => setPattern('sliding'), 10);
+                    foundType = 'Sliding Window Framework';
+                } else if (slug.includes('cycle') || slug.includes('fast-and-slow') || slug.includes('tortoise')) {
+                    switchTab('patterns'); setTimeout(() => setPattern('fastslow'), 10);
+                    foundType = 'Fast & Slow Cycle Isolation';
+                } else if (slug.includes('tree') || slug.includes('bst') || slug.includes('node') || slug.includes('root') || slug.includes('depth')) {
+                    switchTab('trees'); setTimeout(() => setTree(slug.includes('bfs') ? 'bfs' : 'bst'), 10);
+                    foundType = 'Hierarchical Tree Mapping';
+                } else if (slug.includes('sort')) {
+                    switchTab('sorting'); setTimeout(() => setSortAlgo('quick'), 10);
+                    foundType = 'Sequential Sorting Matrix';
+                } else if (slug.includes('search')) {
+                    switchTab('searching'); setTimeout(() => setSearch('binary'), 10);
+                    foundType = 'Targeted Search Heuristic';
+                } else {
+                    switchTab('sorting');
+                    foundType = 'Standard Algorithmic Sequence';
+                }
+
+                updateLogText(`LeetCode Intercept: "${slug}" identified. Mapped to ${foundType}.`);
+                const toast = document.createElement('div');
+                toast.style.cssText = "position:fixed; bottom:20px; right:20px; background:var(--accent); color:#000; padding:12px 24px; border-radius:12px; font-family:var(--font-mono); font-weight:800; font-size:13px; box-shadow:0 10px 40px rgba(0,0,0,0.5); z-index:10000; animation:slide-in 0.3s ease-out;";
+                toast.innerHTML = `<span style="opacity:0.6;font-size:10px;display:block">API AUTO-INJECTOR</span>✓ ${foundType} LOADED`;
+                document.body.appendChild(toast);
+                setTimeout(() => { toast.style.opacity = "0"; setTimeout(() => toast.remove(), 300); }, 3000);
+            }, 1000);
+        }
+
+        async function exportTraceVideo() {
+            const btn = document.getElementById('export-btn');
+            if (!Scrubber.states.length) { alert("Nothing to export. Run an algorithm first!"); return; }
+            if (btn) { btn.innerHTML = '🎬 Loading...'; btn.style.pointerEvents = 'none'; }
+            
+            if (!window.html2canvas) {
+                const script = document.createElement('script');
+                script.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js';
+                document.head.appendChild(script);
+                await new Promise(r => script.onload = r);
+            }
+
+            const area = document.querySelector('.demo-area');
+            if (!area) return;
+
+            Scrubber.pause();
+            const originalIdx = Scrubber.playIdx;
+            
+            // Create recording canvas
+            const canvas = document.createElement('canvas');
+            const rect = area.getBoundingClientRect();
+            canvas.width = rect.width;
+            canvas.height = rect.height;
+            const ctx = canvas.getContext('2d');
+            
+            const stream = canvas.captureStream(0); // Manual frame capture
+            const recorder = new MediaRecorder(stream, { mimeType: 'video/webm;codecs=vp9' });
+            const chunks = [];
+            
+            recorder.ondataavailable = e => chunks.push(e.data);
+            recorder.onstop = () => {
+                const blob = new Blob(chunks, { type: 'video/webm' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `dsa_trace_${Date.now()}.webm`;
+                a.click();
+                if (btn) { btn.innerHTML = '⏺ Export .webm'; btn.style.pointerEvents = 'auto'; }
+                Scrubber.applyFrame(originalIdx);
+            };
+
+            recorder.start();
+            
+            for (let i = 0; i < Scrubber.states.length; i++) {
+                if (btn) btn.innerHTML = `🎥 ${Math.round((i/Scrubber.states.length)*100)}%`;
+                Scrubber.applyFrame(i);
+                // Force a small delay for DOM to settle
+                await new Promise(r => setTimeout(r, 50));
+                const frame = await html2canvas(area, {
+                    backgroundColor: '#11111d',
+                    logging: false,
+                    scale: 1,
+                    useCORS: true
+                });
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                ctx.drawImage(frame, 0, 0, canvas.width, canvas.height);
+                stream.getVideoTracks()[0].requestFrame();
+                await new Promise(r => setTimeout(r, 100)); // Give time for frame to be captured
+            }
+            
+            recorder.stop();
+        }
+
         function switchTab(t) {
             document.querySelectorAll('.tab').forEach((el, i) => {
                 const tabs = ['sorting', 'searching', 'ds', 'trees', 'graphs', 'dp', 'patterns'];
                 el.classList.toggle('active', tabs[i] === t);
             });
             animating = false;
+            Scrubber.pause();
+            Scrubber.states = [];
+            const ttrow = document.getElementById('tt-row');
+            if (ttrow) ttrow.remove();
+            const pip = document.getElementById('pip-window');
+            if (pip) pip.style.display = 'none';
             const fns = { sorting: renderSorting, searching: renderSearching, ds: renderDS, trees: renderTrees, graphs: renderGraphs, dp: renderDP, patterns: renderPatterns };
             if (fns[t]) fns[t]();
         }
@@ -1331,10 +1486,14 @@
       <div class="demo-title" id="sort-title">Bubble Sort</div>
       <div class="demo-desc" id="sort-desc">Repeatedly swaps adjacent elements if they are in the wrong order.</div>
       <div class="viz-area" id="sort-viz"></div>
-      <div class="controls">
+      <div class="controls" style="flex-wrap:wrap;gap:15px;">
         <button class="btn primary" onclick="execTT(runSort)">▶ Visualize</button>
         <button class="btn" onclick="resetSort()">↺ Reset</button>
         <button class="btn" onclick="shuffleSort()">⤮ Shuffle</button>
+        <div style="display:flex;align-items:center;gap:8px;background:rgba(0,0,0,0.3);padding:6px 12px;border-radius:10px;border:1px solid rgba(255,255,255,0.05);">
+          <span style="font-size:12px;color:var(--muted);font-family:var(--font-mono);font-weight:600;">ARR:</span>
+          <input type="text" id="custom-arr" value="${sortArr.join(',')}" placeholder="e.g. 5,3,8,1,9" style="width:120px;padding:4px;background:transparent;border:none;color:var(--text);font-family:var(--font-mono);font-size:13px;outline:none;" onchange="let p=this.value.split(',').map(s=>+s.trim()).filter(n=>!isNaN(n)&&n!=null); if(p.length>0){sortArr=p;} resetSort();">
+        </div>
         <div class="speed-row">Speed: <input type="range" class="speed" min="50" max="800" value="400" oninput="speedMs=800-this.value+50; if(Scrubber.timer) Scrubber.play(speedMs);"></div>
         <span class="info-badge badge-step" id="step-badge">STEPS: 0</span>
       </div>
@@ -1361,16 +1520,28 @@
                 grid.appendChild(d);
             });
             const raceBtn = document.createElement('div');
-            raceBtn.className = 'topic-btn' + (document.getElementById('race-demo') ? ' active' : '');
+            raceBtn.className = 'topic-btn' + (document.getElementById('race-demo') && document.querySelector('#race-demo .demo-title').textContent.includes('Race Mode') ? ' active' : '');
             raceBtn.style.cssText = 'border: 1px solid var(--accent3); box-shadow: 0 0 10px rgba(255,42,109,0.2)';
             raceBtn.innerHTML = `<div class="icon">⚔️</div><div class="name" style="color:var(--accent3)">Race Mode</div><div class="complexity">Compare</div>`;
             raceBtn.onclick = () => {
-                 if (document.getElementById('race-demo')) return;
+                 if (document.getElementById('race-demo') && document.querySelector('#race-demo .demo-title').textContent.includes('Race')) return;
                  document.querySelectorAll('#algo-grid .topic-btn').forEach(b => b.classList.remove('active'));
                  raceBtn.classList.add('active');
                  renderCompare();
             };
             grid.appendChild(raceBtn);
+
+            const stressBtn = document.createElement('div');
+            stressBtn.className = 'topic-btn' + (document.getElementById('race-demo') && document.querySelector('#race-demo .demo-title').textContent.includes('Overclock') ? ' active' : '');
+            stressBtn.style.cssText = 'border: 1px solid var(--accent); box-shadow: 0 0 10px rgba(124,106,255,0.2)';
+            stressBtn.innerHTML = `<div class="icon">🔥</div><div class="name" style="color:var(--accent)">Overclock</div><div class="complexity">Stress Test</div>`;
+            stressBtn.onclick = () => {
+                 if (document.getElementById('race-demo') && document.querySelector('#race-demo .demo-title').textContent.includes('Overclock')) return;
+                 document.querySelectorAll('#algo-grid .topic-btn').forEach(b => b.classList.remove('active'));
+                 stressBtn.classList.add('active');
+                 loadStressTest();
+            };
+            grid.appendChild(stressBtn);
 
             if (!document.getElementById('race-demo')) {
                 updateSortInfo();
@@ -1550,7 +1721,7 @@
         }
 
         function resetSort() { animating = false; setSteps(0); drawSortBars(sortArr, [], [], []); updateLogText('Ready to visualize.'); }
-        function shuffleSort() { animating = false; sortArr = [...sortArr].sort(() => Math.random() - 0.5); resetSort(); }
+        function shuffleSort() { animating = false; sortArr = [...sortArr].sort(() => Math.random() - 0.5); if(document.getElementById('custom-arr')) document.getElementById('custom-arr').value = sortArr.join(','); resetSort(); }
 
         let searchArr = [1, 3, 5, 8, 12, 15, 19, 23, 28, 31, 36];
         let searchTarget = 19;
@@ -1963,10 +2134,8 @@
             document.getElementById('tree-desc').textContent = c.desc;
             document.getElementById('tree-btn1').textContent = c.btn1;
             document.getElementById('tree-btn2').textContent = c.btn2;
-            document.getElementById('tree-btn3').style.display = (mode === 'bfs' || mode === 'dfs') ? 'inline-flex' : 'none';
-            document.getElementById('tree-btn4').style.display = (mode === 'bfs' || mode === 'dfs') ? 'inline-flex' : 'none';
             updateLogText('Traversal mode changed. Press the run button.');
-            drawTree(bst, [], []);
+            drawTree(mode === 'avl' ? (avlRoot || { val: '—', left: null, right: null }) : bst, [], []);
             updateConceptUI('tree-' + mode);
         }
 
@@ -2027,24 +2196,45 @@
                 }
                 animating = false;
             } else {
-                if (animating) return;
                 animating = true;
+                const target = +document.getElementById('tree-val').value;
+                const activeTree = treeMode === 'avl' ? avlRoot : bst;
+                if (!activeTree || activeTree.val === '—') { animating = false; return; }
                 const order = [];
                 if (treeMode === 'bfs') {
-                    const queue = [bst]; const visited = [];
+                    const queue = [activeTree]; const visited = [];
                     while (queue.length && animating) {
                         const node = queue.shift(); visited.push(node.val);
-                        drawTree(bst, visited.slice(0, -1), [node.val]);
+                        drawTree(activeTree, visited.slice(0, -1), [node.val]);
                         updateLogText(`BFS Level Processing: visiting ${node.val}. Buffer Queue State: [${queue.map(x => x.val)}]`);
                         await DELAY(speedMs);
+                        if (target && node.val === target) {
+                            drawTree(activeTree, visited.slice(0, -1), [node.val]);
+                            updateLogText(`✓ Target ${target} located! BFS search terminated successfully.`);
+                            animating = false; return;
+                        }
                         if (node.left) queue.push(node.left);
                         if (node.right) queue.push(node.right);
                     }
                     updateLogText(`BFS traversal complete. Result Sequence: ${visited.join(' → ')}`);
                 } else {
-                    async function dfs(node) { if (!node || !animating) return; order.push(node.val); drawTree(bst, order.slice(0, -1), [node.val]); updateLogText(`DFS Stack dive: visiting ${node.val}. Traversal Path: [${order}]`); await DELAY(speedMs); await dfs(node.left); await dfs(node.right); }
-                    await dfs(bst);
-                    updateLogText(`DFS (Pre-Order) traversal complete. Result Sequence: ${order.join(' → ')}`);
+                    let foundNode = false;
+                    async function dfs(node) { 
+                        if (!node || !animating || foundNode) return; 
+                        order.push(node.val); 
+                        drawTree(activeTree, order.slice(0, -1), [node.val]); 
+                        updateLogText(`DFS Stack dive: visiting ${node.val}. Traversal Path: [${order}]`); 
+                        await DELAY(speedMs); 
+                        if (target && node.val === target) {
+                            foundNode = true;
+                            updateLogText(`✓ Target ${target} discovered in recursion stack! DFS search terminated.`);
+                            return;
+                        }
+                        await dfs(node.left); 
+                        await dfs(node.right); 
+                    }
+                    await dfs(activeTree);
+                    if (!foundNode) updateLogText(`DFS (Pre-Order) traversal complete. Result Sequence: ${order.join(' → ')}`);
                 }
                 animating = false;
             }
@@ -2059,7 +2249,12 @@
                 const found = path[path.length - 1] === v;
                 drawTree(bst, path.slice(0, -1), found ? [v] : []);
                 updateLogText(found ? `✓ Path resolved. Node ${v} located at depth ${path.length - 1}! Steps: ${path.join(' → ')}` : `✗ Traversal exhausted. Target ${v} does not map to any subtree.`);
-            } else { animating = false; drawTree(bst, [], []); updateLogText('Environment parameters reset to original state.'); }
+            } else { 
+                animating = false; 
+                if (treeMode === 'avl') { avlRoot = null; drawTree({ val: '—', left: null, right: null }, [], []); }
+                else { drawTree(bst, [], []); }
+                updateLogText('Environment parameters reset to original state.'); 
+            }
         }
 
         /* ===== AVL Tree ===== */
@@ -2089,9 +2284,9 @@
             return node;
         }
 
-        const GNODES = ['A', 'B', 'C', 'D', 'E', 'F'];
-        const GEDGES = [['A', 'B'], ['A', 'C'], ['B', 'D'], ['B', 'E'], ['C', 'F'], ['D', 'E'], ['E', 'F']];
-        const GPOS = { A: [120, 40], B: [50, 110], C: [190, 110], D: [30, 190], E: [120, 190], F: [210, 190] };
+        let GNODES = ['A', 'B', 'C', 'D', 'E', 'F'];
+        let GEDGES = [['A', 'B'], ['A', 'C'], ['B', 'D'], ['B', 'E'], ['C', 'F'], ['D', 'E'], ['E', 'F']];
+        let GPOS = { A: [120, 40], B: [50, 110], C: [190, 110], D: [30, 190], E: [120, 190], F: [210, 190] };
         let graphAlgo = 'bfs';
 
         function renderGraphs() {
@@ -2109,15 +2304,68 @@
       <div class="viz-area">
         <div id="graph-canvas" style="width:100%;max-width:260px;height:240px;position:relative;margin:0 auto;"></div>
       </div>
-      <div class="controls">
+      <div class="controls" style="flex-wrap:wrap; gap:12px;">
         <button class="btn primary" onclick="execTT(runGraph)">▶ Execute Trace</button>
-        <button class="btn" onclick="resetGraph()">↺ Reset Topology</button>
+        <button class="btn" onclick="renderGraphs()">↺ Reset Topology</button>
+        <div style="display:flex;align-items:center;gap:6px;background:rgba(0,0,0,0.3);padding:6px 12px;border-radius:10px;border:1px solid rgba(255,255,255,0.05);">
+          <span style="font-size:12px;color:var(--muted);font-family:var(--font-mono);font-weight:600;">SEARCH:</span>
+          <input type="text" id="graph-target" placeholder="Node (e.g. F)" style="width:100px;padding:4px;background:transparent;border:none;color:var(--text);font-family:var(--font-mono);font-size:13px;outline:none;">
+        </div>
         <div class="speed-row">Speed: <input type="range" class="speed" min="50" max="800" value="400" oninput="speedMs=800-this.value+50; if(Scrubber.timer) Scrubber.play(speedMs);"></div>
       </div>
-      <div class="log" id="graph-log">Graph instantiated. Press execute to deploy algorithm.</div>
+      <div class="log" id="graph-log">Graph instantiated. Builder unlocked: Double-Click to spawn node, Drag across nodes to link an edge.</div>
     </div>`;
             drawGraph([], []);
             updateConceptUI('graph-' + graphAlgo);
+            
+            setTimeout(() => {
+                const canvas = document.getElementById('graph-canvas');
+                if(!canvas) return;
+                let isDragging = false;
+                let startNode = null;
+                
+                canvas.ondblclick = (e) => {
+                    if (animating) return;
+                    const r = canvas.getBoundingClientRect();
+                    const x = e.clientX - r.left;
+                    const y = e.clientY - r.top;
+                    const letter = String.fromCharCode(65 + GNODES.length); // A, B, C...
+                    if(GNODES.length < 26) {
+                        GNODES.push(letter);
+                        GPOS[letter] = [Math.round(x), Math.round(y)];
+                        updateLogText("Dynamic Topography Builder: Deployed independent Node " + letter + ". Drag to link.");
+                        drawGraph([], []);
+                    }
+                };
+
+                canvas.onmousedown = (e) => {
+                    if(animating) return;
+                    const r = canvas.getBoundingClientRect();
+                    const x = e.clientX - r.left;
+                    const y = e.clientY - r.top;
+                    startNode = GNODES.find(n => Math.hypot(GPOS[n][0] - x, GPOS[n][1] - y) < 28);
+                    if(startNode) isDragging = true;
+                };
+
+                canvas.onmouseup = (e) => {
+                    if(!isDragging || !startNode) return;
+                    isDragging = false;
+                    const r = canvas.getBoundingClientRect();
+                    const x = e.clientX - r.left;
+                    const y = e.clientY - r.top;
+                    const endNode = GNODES.find(n => n !== startNode && Math.hypot(GPOS[n][0] - x, GPOS[n][1] - y) < 28);
+                    if(endNode) {
+                        const exists = GEDGES.some(([a,b]) => (a===startNode && b===endNode) || (a===endNode && b===startNode));
+                        if(!exists) {
+                            const w = Math.max(1, Math.round(Math.hypot(GPOS[startNode][0] - GPOS[endNode][0], GPOS[startNode][1] - GPOS[endNode][1]) / 10));
+                            GEDGES.push([startNode, endNode, w]);
+                            updateLogText("Dynamic Topography Builder: Edge (" + startNode + " ➔ " + endNode + ") initialized with weight=" + w + ".");
+                            drawGraph([], []);
+                        }
+                    }
+                    startNode = null;
+                };
+            }, 50);
         }
 
         function setGraph(a) {
@@ -2141,9 +2389,13 @@
                  <feComposite in="SourceGraphic" in2="blur" operator="over" />
                </filter>
              </defs>`;
-            GEDGES.forEach(([a, b]) => {
+            GEDGES.forEach(([a, b, w]) => {
                 const inPath = path.some(([x, y]) => (x === a && y === b) || (x === b && y === a));
                 svg += `<line x1="${GPOS[a][0]}" y1="${GPOS[a][1]}" x2="${GPOS[b][0]}" y2="${GPOS[b][1]}" stroke="${inPath ? 'var(--accent)' : 'rgba(255,255,255,0.1)'}" stroke-width="${inPath ? 3 : 2}" ${inPath ? 'filter="url(#gglow)"' : ''}/>`;
+                const weight = w || Math.max(1, Math.round(Math.hypot(GPOS[a][0]-GPOS[b][0], GPOS[a][1]-GPOS[b][1]) / 10));
+                const mx = (GPOS[a][0] + GPOS[b][0]) / 2;
+                const my = (GPOS[a][1] + GPOS[b][1]) / 2;
+                if (graphAlgo === 'dijkstra') svg += `<rect x="${mx-8}" y="${my-8}" width="16" height="16" fill="#1e1e2d" rx="4"/><text x="${mx}" y="${my}" text-anchor="middle" dominant-baseline="central" fill="var(--accent3)" font-size="10" font-family="var(--font-mono)" font-weight="700">${weight}</text>`;
             });
             GNODES.forEach(n => {
                 const [x, y] = GPOS[n];
@@ -2157,39 +2409,69 @@
             canvas.innerHTML = svg;
         }
 
-        const ADJ = { A: ['B', 'C'], B: ['A', 'D', 'E'], C: ['A', 'F'], D: ['B', 'E'], E: ['B', 'D', 'F'], F: ['C', 'E'] };
-
         async function runGraph() {
             if (animating) return;
             animating = true;
             const visited = [], path = [];
+            const target = document.getElementById('graph-target') ? document.getElementById('graph-target').value.toUpperCase().trim() : null;
+            
+            const ADJ = {};
+            GNODES.forEach(n => ADJ[n] = []);
+            GEDGES.forEach(([u, v, w]) => {
+                const weight = w || Math.max(1, Math.round(Math.hypot(GPOS[u][0]-GPOS[v][0], GPOS[u][1]-GPOS[v][1]) / 10));
+                ADJ[u].push({node: v, w: weight});
+                if (graphAlgo !== 'topo') ADJ[v].push({node: u, w: weight});
+            });
+            const rootNode = GNODES.includes('A') ? 'A' : GNODES[0];
+
             if (graphAlgo === 'bfs') {
-                const queue = ['A'], seen = new Set(['A']);
+                const queue = [rootNode], seen = new Set([rootNode]);
                 while (queue.length && animating) {
                     const cur = queue.shift(); visited.push(cur);
                     drawGraph(visited, [cur], path); updateLogText(`Processing Node [${cur}]. Queue Load: {${queue.join(',')}} | Visited State: {${visited.join(',')}}`);
                     await DELAY(speedMs);
-                    for (const nb of ADJ[cur]) { if (!seen.has(nb)) { seen.add(nb); queue.push(nb); path.push([cur, nb]); } }
+                    if (target && cur === target) {
+                        updateLogText(`✓ Target Node [${target}] reached! BFS search terminated successfully.`);
+                        animating = false; return;
+                    }
+                    for (const edge of ADJ[cur]) { const nb = edge.node; if (!seen.has(nb)) { seen.add(nb); queue.push(nb); path.push([cur, nb]); } }
                 }
                 updateLogText(`BFS trace successful. Layer mapping completed: ${visited.join(' → ')}`);
             } else if (graphAlgo === 'dfs') {
                 const seen = new Set();
-                async function dfs(n) { if (!n || seen.has(n) || !animating) return; seen.add(n); visited.push(n); drawGraph(visited, [n], path); updateLogText(`Deep Dive processing Node [${n}]. Active Chain: {${visited.join(' → ')}}`); await DELAY(speedMs); for (const nb of ADJ[n]) { if (!seen.has(nb)) { path.push([n, nb]); await dfs(nb); } } }
-                await dfs('A'); updateLogText(`DFS trace successful. Deepest routing paths explored: ${visited.join(' → ')}`);
+                let found = false;
+                async function dfs(n) { 
+                    if (!n || seen.has(n) || !animating || found) return; 
+                    seen.add(n); visited.push(n); 
+                    drawGraph(visited, [n], path); 
+                    updateLogText(`Deep Dive processing Node [${n}]. Active Chain: {${visited.join(' → ')}}`); 
+                    await DELAY(speedMs); 
+                    if (target && n === target) {
+                        found = true;
+                        updateLogText(`✓ Target Node [${target}] discovered in DFS recursion! Stopping trace.`);
+                        return;
+                    }
+                    for (const edge of ADJ[n]) { const nb = edge.node; if (!seen.has(nb)) { path.push([n, nb]); await dfs(nb); } } 
+                }
+                await dfs(rootNode); 
+                if (!found) updateLogText(`DFS trace successful. Deepest routing paths explored: ${visited.join(' → ')}`);
             } else if (graphAlgo === 'dijkstra') {
-                const dist = { A: 0, B: Infinity, C: Infinity, D: Infinity, E: Infinity, F: Infinity };
+                const dist = {}; GNODES.forEach(n => dist[n] = Infinity); dist[rootNode] = 0;
                 const unvis = new Set(GNODES);
                 while (unvis.size && animating) {
                     let u = [...unvis].reduce((a, b) => dist[a] < dist[b] ? a : b);
                     unvis.delete(u); visited.push(u);
                     drawGraph(visited, [u], path); updateLogText(`Node [${u}] selected: calculated distance=${dist[u]}. Grid Vector: ${GNODES.map(n => `${n}:${dist[n] === Infinity ? '∞' : dist[n]}`).join(', ')}`);
                     await DELAY(speedMs);
-                    for (const nb of ADJ[u]) { if (dist[u] + 1 < dist[nb]) { dist[nb] = dist[u] + 1; path.push([u, nb]); } }
+                    for (const edge of ADJ[u]) { 
+                        const nb = edge.node, w = edge.w;
+                        if (dist[u] + w < dist[nb]) { dist[nb] = dist[u] + w; path.push([u, nb]); } 
+                    }
                 }
-                updateLogText(`Optimal routing resolved. Vectors from root (A): ${GNODES.map(n => `[${n}]=${dist[n]}`).join(' | ')}`);
+                updateLogText(`Optimal routing resolved. Vectors from root (${rootNode}): ${GNODES.map(n => `[${n}]=${dist[n]}`).join(' | ')}`);
             } else if (graphAlgo === 'topo') {
                 const order = [], seen = new Set();
-                async function dfs2(n) { if (seen.has(n) || !animating) return; seen.add(n); visited.push(n); drawGraph(visited, [n], path); updateLogText(`Evaluating dependencies for [${n}].`); await DELAY(speedMs); for (const nb of ADJ[n]) if (!seen.has(nb)) { path.push([n, nb]); await dfs2(nb); } order.unshift(n); }
+                async function dfs2(n) { if (seen.has(n) || !animating) return; seen.add(n); visited.push(n); drawGraph(visited, [n], path); updateLogText(`Evaluating dependencies for [${n}].`); await DELAY(speedMs); for (const edge of ADJ[n]) { const nb = edge.node; if (!seen.has(nb)) { path.push([n, nb]); await dfs2(nb); } } order.unshift(n); }
                 for (const n of GNODES) await dfs2(n);
                 updateLogText(`Dependency mapping complete. Valid Topological sequence: ${order.join(' → ')}`);
             } else if (graphAlgo === 'kruskal') {
@@ -2240,9 +2522,10 @@
       <div class="demo-title" id="dp-title">Fibonacci sequence (Memoization)</div>
       <div class="demo-desc" id="dp-desc">Caches calculated subproblem results in a 1D array to eliminate redundant recursive branches.</div>
       <div class="viz-area" id="dp-viz" style="flex-direction:column;align-items:center;gap:12px;"></div>
-      <div class="controls">
+      <div class="controls" style="flex-wrap:wrap;gap:15px;">
         <button class="btn primary" onclick="execTT(runDP)">▶ Compile Trace</button>
         <button class="btn" onclick="renderDP()">↺ Reset Memory</button>
+        <label style="display:flex;align-items:center;cursor:pointer;font-family:var(--font-mono);font-size:12px;color:var(--accent3);background:rgba(0,0,0,0.3);padding:6px 12px;border-radius:10px;border:1px solid rgba(255,255,255,0.05);"><input type="checkbox" style="margin-right:8px;" onchange="document.getElementById('dp-viz').classList.toggle('iso-3d'); dpAlgo==='knapsack'||dpAlgo==='lcs'?setDP(dpAlgo):null;"> 🧊 3D Isometric View</label>
         <div class="speed-row">Speed: <input type="range" class="speed" min="50" max="800" value="400" oninput="speedMs=800-this.value+50; if(Scrubber.timer) Scrubber.play(speedMs);"></div>
       </div>
       <div class="log" id="dp-log">DP engine ready. Dynamic memory states initialized to NULL.</div>
@@ -2301,7 +2584,25 @@
             const table = document.createElement('div'); table.className = 'dp-table'; table.style.gridTemplateColumns = 'repeat(8,40px)';
             const hdr = ['(i\\w)', '0', '1', '2', '3', '4', '5', '6'];
             hdr.forEach(h => { const c = document.createElement('div'); c.className = 'dp-cell header'; c.textContent = h; table.appendChild(c); });
-            grid.forEach((row, i) => { const lbl = document.createElement('div'); lbl.className = 'dp-cell header'; lbl.textContent = 'i=' + i; table.appendChild(lbl); row.forEach((v, w) => { const c = document.createElement('div'); c.className = 'dp-cell' + (i === curI && w === curW ? ' current' : v > 0 ? ' filled' : ''); c.textContent = v || '-'; table.appendChild(c); }); });
+            grid.forEach((row, i) => { 
+                const lbl = document.createElement('div'); lbl.className = 'dp-cell header'; lbl.textContent = 'i=' + i; table.appendChild(lbl); 
+                row.forEach((v, w) => { 
+                    const c = document.createElement('div'); 
+                    c.id = `dp-cell-${i}-${w}`;
+                    c.className = 'dp-cell' + (i === curI && w === curW ? ' current' : v > 0 ? ' filled' : ''); 
+                    c.textContent = v || '-'; 
+                    // Data flow highlighting
+                    if (i > 0) {
+                        const W = [0, 2, 3, 4]; // Current hardcoded Knapsack weights
+                        let sources = [`${i-1},${w}`];
+                        if (w >= W[i]) sources.push(`${i-1},${w-W[i]}`);
+                        c.onmouseenter = () => showDPFlow(i, w, sources);
+                        c.onmouseleave = clearDPFlow;
+                    }
+                    if (document.getElementById('dp-viz').classList.contains('iso-3d') && v > 0) c.style.transform = `translateZ(${v*10}px)`; 
+                    table.appendChild(c); 
+                }); 
+            });
             viz.appendChild(table);
         }
 
@@ -2318,11 +2619,79 @@
             for (let i = 0; i <= s1.length; i++) {
                 const lbl = document.createElement('div'); lbl.className = 'dp-cell header'; lbl.textContent = i === 0 ? '-' : s1[i - 1]; table.appendChild(lbl);
                 for (let j = 0; j <= s2.length; j++) {
-                    const c = document.createElement('div'); c.className = 'dp-cell' + (i === curI && j === curJ ? ' current' : grid[i][j] > 0 ? ' filled' : '');
-                    c.textContent = grid[i][j]; table.appendChild(c);
+                    const c = document.createElement('div'); 
+                    c.id = `dp-cell-${i}-${j}`;
+                    c.className = 'dp-cell' + (i === curI && j === curJ ? ' current' : grid[i][j] > 0 ? ' filled' : '');
+                    c.textContent = grid[i][j];
+                    
+                    if (i > 0 && j > 0) {
+                        let sources = [];
+                        if (s1[i-1] === s2[j-1]) sources.push(`${i-1},${j-1}`);
+                        else sources.push(`${i-1},${j}`, `${i},${j-1}`);
+                        c.onmouseenter = () => showDPFlow(i, j, sources);
+                        c.onmouseleave = clearDPFlow;
+                    }
+
+                    if (document.getElementById('dp-viz').classList.contains('iso-3d') && grid[i][j] > 0) c.style.transform = `translateZ(${grid[i][j]*20}px)`;
+                    table.appendChild(c);
                 }
             }
             viz.appendChild(table);
+        }
+
+        function showDPFlow(ti, tj, sources) {
+            const viz = document.getElementById('dp-viz');
+            if (!viz || viz.classList.contains('iso-3d')) return; // Disable in 3D for coordinate simplicity
+            
+            clearDPFlow();
+            const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+            svg.id = "dp-flow-svg";
+            svg.style.cssText = "position:absolute; top:0; left:0; width:100%; height:100%; pointer-events:none; z-index:10; overflow:visible;";
+            
+            const target = document.getElementById(`dp-cell-${ti}-${tj}`);
+            if (!target) return;
+            
+            const vRect = viz.getBoundingClientRect();
+            const tRect = target.getBoundingClientRect();
+            const tx = tRect.left - vRect.left + tRect.width / 2;
+            const ty = tRect.top - vRect.top + tRect.height / 2;
+            
+            sources.forEach(src => {
+                const [si, sj] = src.split(',').map(Number);
+                const source = document.getElementById(`dp-cell-${si}-${sj}`);
+                if (!source) return;
+                
+                const sRect = source.getBoundingClientRect();
+                const sx = sRect.left - vRect.left + sRect.width / 2;
+                const sy = sRect.top - vRect.top + sRect.height / 2;
+                
+                const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+                const ctrlX = (sx + tx) / 2;
+                const ctrlY = (sy + ty) / 2;
+                path.setAttribute("d", `M ${sx} ${sy} Q ${ctrlX} ${ty} ${tx} ${ty}`);
+                path.setAttribute("fill", "none");
+                path.setAttribute("stroke", "var(--accent)");
+                path.setAttribute("stroke-width", "3");
+                path.setAttribute("stroke-linecap", "round");
+                path.style.filter = "drop-shadow(0 0 5px var(--accent))";
+                path.style.opacity = "0";
+                path.style.transition = "opacity 0.3s ease";
+                
+                // Add arrowhead
+                const marker = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+                marker.setAttribute("cx", sx); marker.setAttribute("cy", sy); marker.setAttribute("r", "4"); marker.setAttribute("fill", "var(--accent3)");
+                
+                svg.appendChild(path);
+                svg.appendChild(marker);
+                setTimeout(() => path.style.opacity = "0.8", 10);
+            });
+            viz.style.position = "relative";
+            viz.appendChild(svg);
+        }
+
+        function clearDPFlow() {
+            const old = document.getElementById('dp-flow-svg');
+            if (old) old.remove();
         }
 
         function drawStairsTable(dp, cur) {
@@ -2405,6 +2774,10 @@
       <div class="controls" style="flex-wrap:wrap;gap:15px;">
         <button class="btn primary" onclick="execTT(runPattern)">▶ Execute Trace</button>
         <button class="btn" onclick="renderPatterns()">↺ Reset Memory</button>
+        <div style="display:flex;align-items:center;gap:8px;background:rgba(0,0,0,0.3);padding:6px 12px;border-radius:10px;border:1px solid rgba(255,255,255,0.05);">
+          <span style="font-size:12px;color:var(--muted);font-family:var(--font-mono);font-weight:600;">TARGET/K:</span>
+          <input type="number" id="pat-val" value="31" style="width:60px;padding:4px;background:transparent;border:none;color:var(--text);font-family:var(--font-mono);font-size:14px;outline:none;">
+        </div>
         <div class="speed-row">Speed: <input type="range" class="speed" min="50" max="800" value="400" oninput="speedMs=800-this.value+50; if(Scrubber.timer) Scrubber.play(speedMs);"></div>
       </div>
       <div class="log" id="pattern-log">Pattern environment initialized. Press execute.</div>
@@ -2414,6 +2787,13 @@
 
         function setPattern(a) {
             patAlgo = a; animating = false;
+            const input = document.getElementById('pat-val');
+            if (input) {
+              if (a === 'twopointers') input.value = 72;
+              else if (a === 'sliding') input.value = 3;
+              else if (a === 'greedy') input.value = 87;
+              else input.value = 0;
+            }
             ['twopointers', 'sliding', 'backtrack', 'greedy', 'hanoi', 'prefix', 'fastslow'].forEach(m => { const b = document.getElementById('pat-' + m); if (b) b.classList.toggle('active', m === a); });
             const titles = { twopointers: 'Two Pointers (Target Sum)', sliding: 'Sliding Window (Max Sum K=3)', backtrack: 'Backtracking (N-Queens 4x4)', greedy: 'Greedy Algorithm (Coin Change)', hanoi: 'Tower of Hanoi (Recursion)', prefix: 'Prefix Sum Array', fastslow: 'Fast & Slow Pointers (Cycle Detection)' };
             const descs = { twopointers: 'L and R pointers move towards each other to find elements summing to target.', sliding: 'Maintains a fixed-size window and slides it across the array to find max sum.', backtrack: 'Explores all possibilities by placing queens, backtracking if a conflict is found.', greedy: 'Picks the largest possible denomination repeatedly to make change.', hanoi: 'Move N disks from peg A to C using B as auxiliary. Each recursive call moves one disk at a time.', prefix: 'Build a running total array so any subarray sum can be computed in O(1) via prefix[j] - prefix[i].', fastslow: 'Slow pointer moves 1 step, fast moves 2. If they meet, a cycle exists in the linked list.' };
@@ -2501,9 +2881,9 @@
 
         async function runPattern() {
             if (animating) return; animating = true;
+            const target = +document.getElementById('pat-val').value;
             if (patAlgo === 'twopointers') {
                 const arr = [2, 5, 8, 12, 16, 23, 38, 56, 72, 91];
-                const target = 72;
                 let L = 0, R = arr.length - 1;
                 updateLogText(`Target Sum = ${target}. Starting Two Pointers.`);
                 while (L < R && animating) {
@@ -2513,8 +2893,8 @@
                     await DELAY(speedMs);
                     if (sum === target) {
                         drawPatternArr(arr, L, R, [L, R]);
-                        updateLogText(`Found target ${target} at indices ${L} and ${R}!`);
-                        break;
+                        updateLogText(`✓ Found target ${target} at indices ${L} and ${R}!`);
+                        animating = false; return;
                     } else if (sum < target) {
                         updateLogText(`${sum} < ${target}. Moving Left pointer +1.`);
                         L++;
@@ -2524,12 +2904,13 @@
                     }
                     await DELAY(speedMs / 2);
                 }
-                if (L >= R) updateLogText("No pair found for target.");
+                if (L >= R) updateLogText(`✗ Search failed. Target ${target} not found.`);
             } else if (patAlgo === 'sliding') {
                 const arr = [4, 2, 1, 7, 8, 1, 2, 8, 1, 0];
-                const K = 3;
+                const K = target || 3;
                 let maxSum = 0, currentSum = 0;
                 let bestL = 0;
+                if (K > arr.length) { updateLogText("Error: Window size K exceeds array length."); animating = false; return; }
                 for (let i = 0; i < K; i++) currentSum += arr[i];
                 maxSum = currentSum;
                 updateLogText(`Initial window [0-${K - 1}] sum = ${currentSum}`);
@@ -2547,60 +2928,30 @@
                     await DELAY(speedMs * 1.5);
                 }
                 drawPatternArr(arr, bestL, bestL + K - 1, Array.from({ length: K }, (_, i) => bestL + i), true);
-                updateLogText(`Completed. Maximum sum of size ${K} is ${maxSum}.`);
+                updateLogText(`✓ Completed. Maximum sum of size ${K} is ${maxSum}.`);
             } else if (patAlgo === 'backtrack') {
                 const N = 4;
                 const queens = [];
                 let solved = false;
-
-                function isSafe(queens, r, c) {
-                    for (let i = 0; i < r; i++) {
-                        let qc = queens[i];
-                        if (qc === c || Math.abs(qc - c) === Math.abs(i - r)) return false;
-                    }
-                    return true;
-                }
-
+                function isSafe(q, r, c) { for (let i = 0; i < r; i++) { if (q[i] === c || Math.abs(q[i] - c) === Math.abs(i - r)) return false; } return true; }
                 async function solve(row) {
                     if (!animating) return false;
                     if (row === N) { solved = true; return true; }
-
                     for (let col = 0; col < N; col++) {
                         if (!animating) return false;
-                        drawNQueensGrid(queens, row, col);
-                        updateLogText(`Evaluating Queen at row ${row}, col ${col}`);
-                        await DELAY(speedMs);
-
+                        drawNQueensGrid(queens, row, col); updateLogText(`Evaluating Queen: row ${row}, col ${col}`); await DELAY(speedMs);
                         if (isSafe(queens, row, col)) {
-                            queens.push(col);
-                            drawNQueensGrid(queens, -1, -1);
-                            updateLogText(`Safe! Placed Queen at row ${row}, col ${col}`);
-                            await DELAY(speedMs / 2);
-
+                            queens.push(col); drawNQueensGrid(queens, -1, -1); updateLogText(`Safe! Placed @ row ${row}, col ${col}`); await DELAY(speedMs / 2);
                             if (await solve(row + 1)) return true;
-
                             if (!animating) return false;
-                            let removedCol = queens.pop();
-                            drawNQueensGrid(queens, row, removedCol);
-                            updateLogText(`Backtracking. Removing Queen from row ${row}, col ${removedCol}`);
-                            await DELAY(speedMs);
-                        } else {
-                            updateLogText(`Conflict! Cannot place Queen at row ${row}, col ${col}`);
-                            await DELAY(speedMs / 2);
+                            let rc = queens.pop(); drawNQueensGrid(queens, row, rc); updateLogText(`Backtracking row ${row}`); await DELAY(speedMs);
                         }
-                    }
-                    return false;
+                    } return false;
                 }
-
                 await solve(0);
-                if (solved) {
-                    drawNQueensGrid(queens, -1, -1);
-                    updateLogText("Solution Found for N-Queens!");
-                } else if (animating) {
-                    updateLogText("No solution exists.");
-                }
+                if (solved) { drawNQueensGrid(queens, -1, -1); updateLogText("✓ N-Queens Solved!"); }
             } else if (patAlgo === 'greedy') {
-                let amount = 87;
+                let amount = target || 87;
                 const coins = [25, 10, 5, 1];
                 const counts = { 25: 0, 10: 0, 5: 0, 1: 0 };
                 updateLogText(`Target amount: ${amount}. Starting greedy coin selection.`);
@@ -2781,10 +3132,14 @@
         const PIP_CODES = {
             'bubble': "for i in range(len(arr)):\n  for j in range(len(arr)-i-1):\n    if arr[j] > arr[j+1]:\n      arr[j], arr[j+1] = arr[j+1], arr[j]",
             'selection': "for i in range(len(arr)):\n  min_idx = i\n  for j in range(i+1, len(arr)):\n    if arr[j] < arr[min_idx]:\n      min_idx = j\n  arr[i], arr[min_idx] = arr[min_idx], arr[i]",
-            'insertion': "for i in range(1, len(arr)):\n  key = arr[i]\n  j = i - 1\n  while j >= 0 and key < arr[j]:\n    arr[j + 1] = arr[j]\n    j -= 1\n  arr[j + 1] = key"
+            'insertion': "for i in range(1, len(arr)):\n  key = arr[i]\n  j = i - 1\n  while j >= 0 and key < arr[j]:\n    arr[j + 1] = arr[j]\n    j -= 1\n  arr[j + 1] = key",
+            'merge': "def mergeSort(arr, l, r):\n  if l < r:\n    m = (l + r) // 2\n    mergeSort(arr, l, m)\n    mergeSort(arr, m + 1, r)\n    merge(arr, l, m, r)",
+            'quick': "def quicksort(arr, lo, hi):\n  if lo < hi:\n    pi = partition(arr, lo, hi)\n    quicksort(arr, lo, pi-1)\n    quicksort(arr, pi+1, hi)",
+            'heap': "def heapify(arr, n, i):\n  largest = i\n  if l < n and arr[l] > arr[largest]:...\n  if largest != i:\n    arr[i], arr[largest] = arr[largest], arr[i]\n    heapify(arr, n, largest)",
+            'counting': "count = [0] * (max(arr) + 1)\nfor x in arr:\n  count[x] += 1\nidx = 0\nfor i, c in enumerate(count):\n  while c > 0:\n    arr[idx] = i; idx += 1; c -= 1"
         };
         function updatePIP(algo, activeLine) {
-            if (!PIP_CODES[algo]) return;
+            if (!PIP_CODES[algo]) { pipWindow.style.display = 'none'; return; }
             pipWindow.style.display = 'block';
             const lines = PIP_CODES[algo].split('\n');
             document.getElementById('pip-code').innerHTML = lines.map((l,i) => `<div style="padding:2px 4px; border-radius:4px; background:${i===activeLine?'rgba(124,106,255,0.3)':'transparent'};color:${i===activeLine?'#fff':'var(--muted)'}; font-weight:${i===activeLine?'800':'400'}; transition:all 0.2s;">${l}</div>`).join('');
@@ -2817,6 +3172,44 @@
                     }
                     sorted.push(arr.length - 1 - i);
                 }
+            } else if (algo === 'selection') {
+                for (let i = 0; i < arr.length && animating; i++) {
+                    let min = i;
+                    for (let j = i + 1; j < arr.length && animating; j++) {
+                        drawRaceBars(arr, vizId, [min], [j], [...sorted]); await DELAY(speedMs);
+                        if (arr[j] < arr[min]) min = j;
+                    }
+                    [arr[i], arr[min]] = [arr[min], arr[i]]; sorted.push(i);
+                    drawRaceBars(arr, vizId, [], [], [...sorted]); await DELAY(speedMs);
+                }
+            } else if (algo === 'insertion') {
+                for (let i = 1; i < arr.length && animating; i++) {
+                    let key = arr[i], j = i - 1;
+                    while (j >= 0 && arr[j] > key && animating) {
+                        arr[j + 1] = arr[j]; j--;
+                        drawRaceBars(arr, vizId, [j + 1], [i], []); await DELAY(speedMs);
+                    }
+                    arr[j + 1] = key;
+                    drawRaceBars(arr, vizId, [j + 1], [], []); await DELAY(speedMs/2);
+                }
+            } else if (algo === 'merge') {
+                async function merge(a, l, m, r) {
+                    let left = a.slice(l, m + 1), right = a.slice(m + 1, r + 1), i = 0, j = 0, k = l;
+                    while (i < left.length && j < right.length && animating) {
+                        drawRaceBars(a, vizId, [k], [], []); await DELAY(speedMs);
+                        if (left[i] <= right[j]) a[k++] = left[i++]; else a[k++] = right[j++];
+                    }
+                    while (i < left.length) a[k++] = left[i++];
+                    while (j < right.length) a[k++] = right[j++];
+                }
+                async function mergeSort(a, l, r) {
+                    if (l >= r || !animating) return;
+                    let m = Math.floor((l + r) / 2);
+                    await mergeSort(a, l, m); await mergeSort(a, m + 1, r);
+                    await merge(a, l, m, r);
+                    drawRaceBars(a, vizId, [], [], []); await DELAY(speedMs/2);
+                }
+                await mergeSort(arr, 0, arr.length - 1);
             } else if (algo === 'quick') {
                 async function split(lo, hi) {
                     if (lo >= hi || !animating) { if (lo === hi) sorted.push(lo); return; }
@@ -2830,8 +3223,106 @@
                     await split(lo, j-1); await split(j+1, hi);
                 }
                 await split(0, arr.length-1);
+            } else if (algo === 'heap') {
+                async function heapify(a, n, i) {
+                    let largest = i, l = 2 * i + 1, r = 2 * i + 2;
+                    if (l < n && a[l] > a[largest]) largest = l;
+                    if (r < n && a[r] > a[largest]) largest = r;
+                    if (largest !== i) { [a[i], a[largest]] = [a[largest], a[i]]; drawRaceBars(a, vizId, [i, largest], [], [...sorted]); await DELAY(speedMs); await heapify(a, n, largest); }
+                }
+                for (let i = Math.floor(arr.length / 2) - 1; i >= 0 && animating; i--) await heapify(arr, arr.length, i);
+                for (let i = arr.length - 1; i > 0 && animating; i--) {
+                    [arr[0], arr[i]] = [arr[i], arr[0]]; sorted.push(i);
+                    drawRaceBars(arr, vizId, [0], [], [...sorted]); await DELAY(speedMs);
+                    await heapify(arr, i, 0);
+                }
+            } else if (algo === 'counting') {
+                const max = Math.max(...arr);
+                const count = Array(max + 1).fill(0);
+                for (let i = 0; i < arr.length && animating; i++) {
+                    count[arr[i]]++;
+                    drawRaceBars(arr, vizId, [i], [], []); await DELAY(speedMs);
+                }
+                let idx = 0;
+                for (let v = 0; v <= max && animating; v++) {
+                    for (let c = 0; c < count[v] && animating; c++) {
+                        arr[idx] = v;
+                        drawRaceBars(arr, vizId, [idx], [], Array.from({ length: idx }, (_, i) => i));
+                        await DELAY(speedMs); idx++;
+                    }
+                }
             }
             drawRaceBars(arr, vizId, [], [], Array.from({length:arr.length},(_,i)=>i));
+        }
+
+        function loadStressTest() {
+            animating = false;
+            const demoArea = document.querySelector('.demo-area');
+            if(!demoArea) return;
+            const wrapper = document.createElement('div');
+            wrapper.innerHTML = `
+    <div class="demo-area" id="race-demo">
+      <div class="demo-title" style="color:var(--accent);">🔥 Overclock: Big-O Stress Tester</div>
+      <div class="demo-desc">Bypasses DOM animations to execute raw JS arrays in-memory. Visualizes exact performance drop-off as Element Count (N) approaches 25,000.</div>
+      <div style="background:rgba(0,0,0,0.3); padding:20px; border-radius:16px; border:1px solid rgba(255,255,255,0.05); margin-top:20px; text-align:center;">
+          <div style="margin-bottom:15px; font-family:var(--font-mono); color:var(--muted);">Elements (N): <input type="number" id="stress-n" value="10000" max="50000" style="background:#1b163d; color:#fff; border:1px solid var(--accent); padding:5px 10px; border-radius:5px; width:80px; outline:none;"></div>
+          <button class="btn primary" onclick="runStressTest()">🚀 Run Benchmark</button>
+      </div>
+      <div class="viz-area" style="min-height:250px; display:flex; align-items:flex-end; justify-content:space-around; padding:20px; gap:20px; box-shadow:none; border:none; background:transparent;" id="stress-viz">
+         <div id="stress-bar-bubble" style="width:100%; max-width:200px; background:var(--accent3); height:0px; transition:height 0.8s cubic-bezier(0.34, 1.56, 0.64, 1); border-radius:10px 10px 0 0; position:relative;"><span style="position:absolute; top:-30px; left:50%; transform:translateX(-50%); font-family:var(--font-mono); font-size:14px; font-weight:800;">O(N²)</span></div>
+         <div id="stress-bar-quick" style="width:100%; max-width:200px; background:var(--accent); height:0px; transition:height 0.8s cubic-bezier(0.34, 1.56, 0.64, 1); border-radius:10px 10px 0 0; position:relative;"><span style="position:absolute; top:-30px; left:50%; transform:translateX(-50%); font-family:var(--font-mono); font-size:14px; font-weight:800;">O(N logN)</span></div>
+      </div>
+      <div class="log" id="stress-log">Warning: High N values (>25k) with Bubble Sort will visibly hang the Main Thread.</div>
+    </div>`;
+            demoArea.replaceWith(wrapper.firstElementChild);
+        }
+
+        async function runStressTest() {
+            const btn = document.querySelector('button[onclick="runStressTest()"]');
+            btn.innerHTML = 'Running...'; btn.style.pointerEvents = 'none';
+            const log = document.getElementById('stress-log');
+            const nInput = parseInt(document.getElementById('stress-n').value) || 10000;
+            const n = Math.min(50000, nInput); // Cap to avoid browser death
+            
+            document.getElementById('stress-bar-bubble').style.height = '0px';
+            document.getElementById('stress-bar-quick').style.height = '0px';
+            
+            log.textContent = `Generating array of ${n} random elements...`;
+            await new Promise(r => setTimeout(r, 50));
+            const arr1 = Array.from({length: n}, () => Math.random());
+            const arr2 = [...arr1];
+            
+            log.textContent = `Running nested Bubble Sort (O(N²)). Main thread locking mapped...`;
+            await new Promise(r => setTimeout(r, 100)); // allow repaint
+            
+            const t0 = performance.now();
+            // Blocking iteration
+            for(let i=0; i<n; i++) {
+                for(let j=0; j<n-i-1; j++) {
+                    if(arr1[j] > arr1[j+1]) { let t=arr1[j]; arr1[j]=arr1[j+1]; arr1[j+1]=t; }
+                }
+            }
+            const t1 = performance.now();
+            const bubbleTime = (t1-t0).toFixed(2);
+            
+            log.textContent = `Bubble Sort mapped. Running internal Quick Sort (O(N log N))...`;
+            await new Promise(r => setTimeout(r, 50));
+
+            const t2 = performance.now();
+            arr2.sort((a,b) => a-b);
+            const t3 = performance.now();
+            const quickTime = (t3-t2).toFixed(2);
+
+            log.textContent = `Benchmark Complete! N=${n} | Bubble: ${bubbleTime}ms | Quick/TimSort: ${quickTime}ms`;
+            
+            const maxTime = Math.max(bubbleTime, quickTime, 1);
+            document.getElementById('stress-bar-bubble').style.height = `${Math.max(5, (bubbleTime / maxTime) * 200)}px`;
+            document.getElementById('stress-bar-bubble').innerHTML = `<span style="position:absolute; top:-30px; left:50%; transform:translateX(-50%); font-family:var(--font-mono); font-size:14px; font-weight:800; color:var(--accent3);">O(N²)</span><span style="position:absolute; bottom:15px; left:50%; transform:translateX(-50%); font-family:var(--font-mono); font-size:14px; color:#fff; font-weight:800;">${bubbleTime}ms</span>`;
+            
+            document.getElementById('stress-bar-quick').style.height = `${Math.max(5, (quickTime / maxTime) * 200)}px`;
+            document.getElementById('stress-bar-quick').innerHTML = `<span style="position:absolute; top:-30px; left:50%; transform:translateX(-50%); font-family:var(--font-mono); font-size:14px; font-weight:800; color:var(--accent);">O(N logN)</span><span style="position:absolute; bottom:15px; left:50%; transform:translateX(-50%); font-family:var(--font-mono); font-size:14px; color:#fff; font-weight:800;">${quickTime}ms</span>`;
+
+            btn.innerHTML = '🚀 Run Benchmark'; btn.style.pointerEvents = 'auto';
         }
 
         async function executeRace() {
@@ -2861,14 +3352,24 @@
           <div style="flex:1; min-width:300px; background:rgba(0,0,0,0.2); padding:20px; border-radius:16px; border:1px solid rgba(255,255,255,0.05);">
              <select id="race-algo-1" style="width:100%; padding:10px; border-radius:8px; background:#1b163d; color:#fff; border:1px solid var(--accent); outline:none; font-family:var(--font-head); font-weight:600; font-size:14px; margin-bottom:15px;" onchange="animating=false; drawRaceBars(raceArr,'race-viz-1')">
                 <option value="bubble" selected>Bubble Sort (O(n²))</option>
+                <option value="selection">Selection Sort (O(n²))</option>
+                <option value="insertion">Insertion Sort (O(n²))</option>
+                <option value="merge">Merge Sort (O(n log n))</option>
                 <option value="quick">Quick Sort (O(n log n))</option>
+                <option value="heap">Heap Sort (O(n log n))</option>
+                <option value="counting">Counting Sort (O(n+k))</option>
              </select>
              <div class="viz-area" id="race-viz-1" style="min-height:200px; margin:0; box-shadow:none;"></div>
           </div>
           <div style="flex:1; min-width:300px; background:rgba(0,0,0,0.2); padding:20px; border-radius:16px; border:1px solid rgba(255,255,255,0.05);">
              <select id="race-algo-2" style="width:100%; padding:10px; border-radius:8px; background:#1b163d; color:#fff; border:1px solid var(--accent2); outline:none; font-family:var(--font-head); font-weight:600; font-size:14px; margin-bottom:15px;" onchange="animating=false; drawRaceBars(raceArr,'race-viz-2')">
                 <option value="bubble">Bubble Sort (O(n²))</option>
+                <option value="selection">Selection Sort (O(n²))</option>
+                <option value="insertion">Insertion Sort (O(n²))</option>
+                <option value="merge">Merge Sort (O(n log n))</option>
                 <option value="quick" selected>Quick Sort (O(n log n))</option>
+                <option value="heap">Heap Sort (O(n log n))</option>
+                <option value="counting">Counting Sort (O(n+k))</option>
              </select>
              <div class="viz-area" id="race-viz-2" style="min-height:200px; margin:0; box-shadow:none;"></div>
           </div>
@@ -2889,5 +3390,4 @@
         renderSorting();
     </script>
 </body>
-
 </html>
