@@ -495,11 +495,12 @@
             --rz: -45deg;
             transform: perspective(1200px) rotateX(var(--rx)) rotateZ(var(--rz));
             transform-style: preserve-3d;
+            transform-origin: center center;
             transition: transform 0.6s cubic-bezier(0.25, 1, 0.5, 1);
-            margin-top: 60px !important;
-            margin-bottom: 60px !important;
+            margin: 60px auto !important;
             cursor: grab;
             user-select: none;
+            width: fit-content;
         }
         .iso-3d:active { cursor: grabbing; }
         .iso-3d .dp-cell, .iso-3d .dp-cell.header {
@@ -1262,7 +1263,7 @@
         }
         const Scrubber = new StateManager();
 
-        /* ===== ISO 3D Interaction ===== */
+        /* ===== ISO 3D Interaction (User-Friendly Rotation) ===== */
         let isIsoDragging = false, isoX = 0, isoY = 0, currentRX = 60, currentRZ = -45;
         const isoStart = (e) => {
             const iso = e.target.closest('.iso-3d'); if (!iso) return;
@@ -1273,13 +1274,44 @@
             if (!isIsoDragging) return; const iso = document.querySelector('.iso-3d'); if (!iso) return;
             const ev = e.type.includes('touch') ? e.touches[0] : e;
             let dx = ev.clientX - isoX; let dy = ev.clientY - isoY;
-            currentRZ += dx * 0.5; currentRX -= dy * 0.5;
-            currentRX = Math.max(20, Math.min(85, currentRX)); // Limit vertical tilt
+            
+            // intuitive mapping: drag horizontal -> yaw, drag vertical -> pitch
+            currentRZ += dx * 0.6; currentRX += dy * 0.6;
+            currentRX = Math.max(15, Math.min(85, currentRX)); 
+            
             iso.style.setProperty('--rx', currentRX + 'deg');
             iso.style.setProperty('--rz', currentRZ + 'deg');
             isoX = ev.clientX; isoY = ev.clientY;
             if (e.cancelable) e.preventDefault();
         };
+        function toggle3DMode() {
+            const viz = document.getElementById('dp-viz'); if (!viz) return;
+            const master = document.getElementById('3d-master'); if (!master) return;
+            const resetBtn = document.getElementById('3d-reset-icon');
+            const mainBtn = master.querySelector('button');
+            const isActive = viz.classList.contains('iso-3d');
+
+            if (!isActive) {
+                viz.classList.add('iso-3d');
+                mainBtn.innerHTML = '🧊 Disable 3D';
+                resetBtn.style.display = 'block';
+                currentRX = 60; currentRZ = -45; // Reset internal tracking
+            } else {
+                viz.classList.remove('iso-3d');
+                mainBtn.innerHTML = '🧊 Activate 3D';
+                resetBtn.style.display = 'none';
+            }
+            // Trigger re-render to apply/remove Z-translations
+            if (dpAlgo === 'knapsack' || dpAlgo === 'lcs') setDP(dpAlgo);
+        }
+        function reset3DView() {
+            currentRX = 60; currentRZ = -45;
+            const iso = document.querySelector('.iso-3d');
+            if (iso) {
+                iso.style.transition = 'transform 0.8s cubic-bezier(0.34, 1.56, 0.64, 1)';
+                iso.style.setProperty('--rx', '60deg'); iso.style.setProperty('--rz', '-45deg');
+            }
+        }
         const isoEnd = () => {
             isIsoDragging = false; const iso = document.querySelector('.iso-3d');
             if (iso) iso.style.transition = 'transform 0.4s ease-out';
@@ -2741,7 +2773,10 @@
       <div class="controls" style="flex-wrap:wrap;gap:15px;">
         <button class="btn primary" onclick="execTT(runDP)">▶ Compile Trace</button>
         <button class="btn" onclick="renderDP()">↺ Reset Memory</button>
-        <label style="display:flex;align-items:center;cursor:pointer;font-family:var(--font-mono);font-size:12px;color:var(--accent3);background:rgba(0,0,0,0.3);padding:6px 12px;border-radius:10px;border:1px solid rgba(255,255,255,0.05);"><input type="checkbox" style="margin-right:8px;" onchange="document.getElementById('dp-viz').classList.toggle('iso-3d'); dpAlgo==='knapsack'||dpAlgo==='lcs'?setDP(dpAlgo):null;"> 🧊 3D Isometric View</label>
+        <div id="3d-master" style="display:flex; align-items:stretch; border:1px solid var(--accent); border-radius:10px; overflow:hidden; background:rgba(0,0,0,0.3); transition:all 0.3s; height:34px;">
+            <button class="btn" style="border:none; border-radius:0; padding:4px 14px; background:transparent; font-size:12px; color:var(--accent3); font-weight:700; cursor:pointer;" onclick="toggle3DMode()">🧊 Activate 3D</button>
+            <button class="btn" id="3d-reset-icon" style="border:none; border-radius:0; padding:4px 10px; background:rgba(255,255,255,0.05); border-left:1px solid var(--accent); display:none; cursor:pointer; color:var(--accent);" onclick="reset3DView()" title="Reset 3D Perspective">📐</button>
+        </div>
         <div class="speed-row">Speed: <input type="range" class="speed" min="50" max="800" value="400" oninput="speedMs=800-this.value+50; if(Scrubber.timer) Scrubber.play(speedMs);"></div>
       </div>
       <div class="log" id="dp-log">DP engine ready. Dynamic memory states initialized to NULL.</div>
