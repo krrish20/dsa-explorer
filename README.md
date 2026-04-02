@@ -1,6 +1,6 @@
 # 🚀 DSA Explorer: Interactive Algorithmic Laboratory
 
-![DSA Explorer Preview](https://img.shields.io/badge/Algorithm-Visualizer-7C6AFF?style=for-the-badge&logo=javascript&logoColor=white) 
+![DSA Explorer Preview](<img width="2920" height="1660" alt="Image" src="https://github.com/user-attachments/assets/a386cd7e-99f9-48ba-bab1-fa6f23762ec0" />) 
 ![Status](https://img.shields.io/badge/Status-Production--Ready-4FFFE5?style=for-the-badge)
 
 **DSA Explorer** is a high-performance, browser-based pedagogical tool designed to bridge the gap between theoretical data structures and runtime execution. It provides deep, frame-buffered visualizations that allow students to analyze, scrub, and "benchmark" algorithms in real-time.
